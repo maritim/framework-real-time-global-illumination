@@ -4,7 +4,7 @@
 
 cmake_minimum_required (VERSION 3.6)
 
-project (LiteHeaderTool)
+project (HeaderTool)
 
 set (CMAKE_BUILD_TYPE, RELEASE)
 
@@ -19,15 +19,15 @@ else(NOT MSVC)
 	add_compile_options(/MP)
 endif(NOT MSVC)
 
-file (GLOB_RECURSE LiteHeaderToolSourceFiles *)
+file (GLOB_RECURSE HeaderToolSourceFiles *)
 
-add_executable (LiteHeaderTool ${LiteHeaderToolSourceFiles})
+add_executable (HeaderTool ${HeaderToolSourceFiles})
 
 include_directories (${PROJECT_SOURCE_DIR})
 
 if(MSVC)
 	MACRO(GROUP_SRC SRCS)
-	  foreach(FILE ${LiteEngineSourceFiles}) 
+	  foreach(FILE ${FrameworkRealTimeGlobalIlluminationSourceFiles}) 
 		#convert source file to absolute
 		get_filename_component(ABSOLUTE_PATH "${FILE}" ABSOLUTE)
 		# Get the directory of the absolute source file
@@ -46,9 +46,9 @@ if(MSVC)
 	  endforeach()
 	ENDMACRO(GROUP_SRC)
 
-	group_src (${LiteHeaderToolSourceFiles})
+	group_src (${HeaderToolSourceFiles})
 endif(MSVC)
 
 if(NOT MSVC)
-	target_link_libraries (LiteHeaderTool stdc++fs)
+	target_link_libraries (HeaderTool stdc++fs)
 endif(NOT MSVC)

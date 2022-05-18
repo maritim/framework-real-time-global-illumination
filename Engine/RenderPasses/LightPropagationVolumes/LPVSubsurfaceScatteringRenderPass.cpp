@@ -77,14 +77,19 @@ std::vector<PipelineAttribute> LPVSubsurfaceScatteringRenderPass::GetCustomAttri
 	*/
 
 	PipelineAttribute lpvIndirectRefractiveIntensity;
+	PipelineAttribute lpvRefractiveIterations;
 
 	lpvIndirectRefractiveIntensity.type = PipelineAttribute::AttrType::ATTR_1F;
+	lpvRefractiveIterations.type = PipelineAttribute::AttrType::ATTR_1I;
 
 	lpvIndirectRefractiveIntensity.name = "lpvIndirectRefractiveIntensity";
+	lpvRefractiveIterations.name = "lpvRefractiveIterations";
 
 	lpvIndirectRefractiveIntensity.value.x = settings.lpv_indirect_refractive_intensity;
+	lpvRefractiveIterations.value.x = settings.lpv_refraction_iterations;
 
 	attributes.push_back (lpvIndirectRefractiveIntensity);
+	attributes.push_back (lpvRefractiveIterations);
 
 	return attributes;
 }

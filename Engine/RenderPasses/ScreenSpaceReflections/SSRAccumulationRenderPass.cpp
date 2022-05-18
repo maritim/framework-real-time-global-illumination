@@ -7,7 +7,7 @@ bool SSRAccumulationRenderPass::IsAvailable (const RenderScene* renderScene, con
 	 * Check if screen space ambient occlusion is enabled
 	*/
 
-	return settings.ssr_enabled;
+	return settings.indirect_specular_enabled;
 }
 
 std::string SSRAccumulationRenderPass::GetPostProcessFragmentShaderPath () const

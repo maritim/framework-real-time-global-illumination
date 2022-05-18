@@ -23,30 +23,12 @@
 #include "RenderPasses/FramebufferMipmapsGenerationRenderPass.h"
 
 #include "RenderPasses/ShadowMap/DirectionalLightShadowMapRenderPass.h"
-// #include "RenderPasses/ShadowMap/DirectionalLightExponentialShadowMapRenderPass.h"
-// #include "RenderPasses/ShadowMap/ExponentialShadowMapBlurRenderPass.h"
 #include "RenderPasses/DeferredDirectionalLightRenderPass.h"
 #include "RenderPasses/DirectionalLightContainerRenderVolumeCollection.h"
-
-#include "RenderPasses/DeferredPointLightRenderPass.h"
-#include "RenderPasses/PointLightContainerRenderVolumeCollection.h"
-
-#include "RenderPasses/DeferredSpotLightRenderPass.h"
-#include "RenderPasses/ShadowMap/DeferredSpotLightShadowMapRenderPass.h"
-#include "RenderPasses/SpotLightContainerRenderVolumeCollection.h"
 
 #include "RenderPasses/FramebufferGenerationRenderPass.h"
 
 #include "RenderPasses/IdleRenderPass.h"
-#include "RenderPasses/ScreenSpaceDirectionalOcclusion/SSDOSamplesGenerationRenderPass.h"
-#include "RenderPasses/ScreenSpaceDirectionalOcclusion/SSDOInterpolatedRenderPass.h"
-#include "RenderPasses/ScreenSpaceDirectionalOcclusion/SSDORenderPass.h"
-#include "RenderPasses/ScreenSpaceDirectionalOcclusion/SSDOTemporalFilterRenderPass.h"
-#include "RenderPasses/ScreenSpaceDirectionalOcclusion/SSDOAccumulationRenderPass.h"
-#include "RenderPasses/ScreenSpaceReflections/SSRRenderPass.h"
-#include "RenderPasses/ScreenSpaceReflections/SSRSpecularRenderPass.h"
-#include "RenderPasses/ScreenSpaceReflections/SSRAccumulationRenderPass.h"
-#include "RenderPasses/ScreenSpaceSubsurfaceScattering/SSSubsurfaceScatteringRenderPass.h"
 #include "RenderPasses/TemporalAntialiasing/TAARenderPass.h"
 #include "RenderPasses/VolumetricLighting/VolumetricLightingDirectionalRenderPass.h"
 #include "RenderPasses/VolumetricLighting/VolumetricLightingRenderPass.h"
@@ -80,45 +62,20 @@ void DirectLightingRenderModule::Init ()
 	_renderPasses.push_back (ContainerRenderPass::Builder ()
 		.Volume (new DirectionalLightContainerRenderVolumeCollection ())
 		.Attach (new DirectionalLightShadowMapRenderPass ())
-		// .Attach (new DirectionalLightExponentialShadowMapRenderPass ())
-		// .Attach (new ExponentialShadowMapBlurRenderPass ())
 		.Attach (new DeferredDirectionalLightRenderPass ())
 		.Attach (new VolumetricLightingDirectionalRenderPass ())
-		// .Attach (ContainerRenderPass::Builder ()
-			// .Volume (new IterateOverRenderVolumeCollection (1))
-			.Attach (new DirectionalLightSourceRenderPass ())
-			.Attach (new LightShaftsRenderPass ())
-			// .Build ())
-		.Build ());
-	_renderPasses.push_back (ContainerRenderPass::Builder ()
-		.Volume (new PointLightContainerRenderVolumeCollection ())
-		.Attach (new DeferredPointLightRenderPass ())
-		.Build ());
-	_renderPasses.push_back (ContainerRenderPass::Builder ()
-		.Volume (new SpotLightContainerRenderVolumeCollection ())
-		.Attach (new DeferredSpotLightShadowMapRenderPass ())
-		.Attach (new DeferredSpotLightRenderPass ())
+		.Attach (new DirectionalLightSourceRenderPass ())
+		.Attach (new LightShaftsRenderPass ())
 		.Build ());
 	_renderPasses.push_back (new DeferredSkyboxRenderPass ());
+
+	/*
+	 * Post processing passes
+	*/
+
 	_renderPasses.push_back (ContainerRenderPass::Builder ()
 		.Volume (new IterateOverRenderVolumeCollection (1))
 		.Attach (new IdleRenderPass ())
-		.Attach (ContainerRenderPass::Builder ()
-			.Volume (new IterateOverRenderVolumeCollection (1))
-			.Attach (new FramebufferMipmapsGenerationRenderPass ("PostProcessMapVolume"))
-			.Attach (new SSDOSamplesGenerationRenderPass ())
-			.Attach (new SSDOInterpolatedRenderPass ())
-			.Attach (new SSDORenderPass ())
-			.Attach (new SSDOTemporalFilterRenderPass ())
-			.Attach (new SSDOAccumulationRenderPass ())
-			.Build ())
-		.Attach (ContainerRenderPass::Builder ()
-			.Volume (new IterateOverRenderVolumeCollection (1))
-			.Attach (new SSRRenderPass ())
-			.Attach (new SSRSpecularRenderPass ())
-			.Attach (new SSRAccumulationRenderPass ())
-			.Build ())
-		.Attach (new SSSubsurfaceScatteringRenderPass ())
 		.Attach	(new TAARenderPass ())
 		.Attach (new VolumetricLightingRenderPass ())
 		.Attach (new LightShaftsAccumulationRenderPass ())
@@ -138,7 +95,5 @@ void DirectLightingRenderModule::Init ()
 		.Attach (new DeferredBlitRenderPass())
 		.Build ());
 	_renderPasses.push_back (new ForwardRenderPass ());
-	_renderPasses.push_back (new WindowBlitRenderPass ());
 	_renderPasses.push_back (new GUIGizmosRenderPass ());
-	_renderPasses.push_back (new GUIRenderPass ());
 }

@@ -178,7 +178,7 @@ void DeferredGeometryRenderPass::ClearGBuffer (GBuffer* framebuffer, const Camer
 	 * Clear all buffers
 	*/
 
-	_framebuffer->GetFramebufferView ()->Activate ();
+	framebuffer->GetFramebufferView ()->Activate ();
 
 	GL::ClearColor (0, 0, 0, 0);
 	GL::Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -274,7 +274,7 @@ void DeferredGeometryRenderPass::GeometryPass (const RenderScene* renderScene, c
 		* Deferred Rendering: Prepare for rendering
 		*/
 
-		BindFrameBuffer (renderObject->GetSceneLayers ());
+		BindFrameBuffer (renderObject->GetSceneLayers (), settings);
 
 		/*
 		 * Lock shader according to object layers
@@ -324,13 +324,15 @@ void DeferredGeometryRenderPass::GenerateMipmaps ()
 	}
 }
 
-void DeferredGeometryRenderPass::BindFrameBuffer (int sceneLayers)
+void DeferredGeometryRenderPass::BindFrameBuffer (int sceneLayers,
+	const RenderSettings& settings)
 {
 	/*
 	 * Bind generic framebuffer
 	*/
 
-	if (!(sceneLayers & SceneLayer::TRANSLUCENCY)) {
+	if (settings.renderMode != "ScreenSpaceGlobalIlluminationRenderModule" ||
+		!(sceneLayers & SceneLayer::TRANSLUCENCY)) {
 		_framebuffer->GetFramebufferView ()->Activate ();
 	}
 
@@ -338,7 +340,8 @@ void DeferredGeometryRenderPass::BindFrameBuffer (int sceneLayers)
 	 * Bind framebuffer for translucency
 	*/
 
-	if (sceneLayers & SceneLayer::TRANSLUCENCY) {
+	if (settings.renderMode == "ScreenSpaceGlobalIlluminationRenderModule" &&
+		sceneLayers & SceneLayer::TRANSLUCENCY) {
 		_translucencyFramebuffer->GetFramebufferView ()->Activate ();
 	}
 }

@@ -22,25 +22,25 @@ endif(NOT MSVC)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-file (GLOB_RECURSE LiteEngineSourceFiles *)
+file (GLOB_RECURSE FrameworkRealTimeGlobalIlluminationSourceFiles *)
 
-file (GLOB_RECURSE LiteEngineComponentHeaderFiles Components/*.h)
+file (GLOB_RECURSE FrameworkRealTimeGlobalIlluminationComponentHeaderFiles Components/*.h)
 
 add_custom_command(
-    COMMAND LiteHeaderTool Components ${CMAKE_CURRENT_BINARY_DIR}/GeneratedComponents.cpp ENGINE_API
+    COMMAND HeaderTool Components ${CMAKE_CURRENT_BINARY_DIR}/GeneratedComponents.cpp ENGINE_API
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/GeneratedComponents.cpp
-    DEPENDS ${LiteEngineComponentHeaderFiles} LiteHeaderTool
+    DEPENDS ${FrameworkRealTimeGlobalIlluminationComponentHeaderFiles} HeaderTool
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/Engine
     COMMENT "Generate persistent component data..."
     )
 
 set (GeneratedSourceFiles ${CMAKE_CURRENT_BINARY_DIR}/GeneratedComponents.cpp)
 
-add_executable (LiteEngine ${LiteEngineSourceFiles} ${GeneratedSourceFiles})
+add_executable (FrameworkRealTimeGlobalIllumination ${FrameworkRealTimeGlobalIlluminationSourceFiles} ${GeneratedSourceFiles})
 
 if (MSVC)
-    set_property(DIRECTORY "${PROJECT_SOURCE_DIR}" PROPERTY VS_STARTUP_PROJECT LiteEngine)
-    set_property(TARGET LiteEngine PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+    set_property(DIRECTORY "${PROJECT_SOURCE_DIR}" PROPERTY VS_STARTUP_PROJECT FrameworkRealTimeGlobalIllumination)
+    set_property(TARGET FrameworkRealTimeGlobalIllumination PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 endif()
 
 set (OpenGL_GL_PREFERENCE GLVND)
@@ -52,20 +52,20 @@ find_library (SDL2_image NAMES SDL2_image HINTS ${PROJECT_SOURCE_DIR}/3rdparty/S
 find_library (SDL_sound NAMES SDL_sound HINTS ${PROJECT_SOURCE_DIR}/3rdparty/SDL2/lib)
 find_library (assimp NAMES assimp HINTS ${PROJECT_SOURCE_DIR}/3rdparty/assimp/lib)
 
-target_include_directories (LiteEngine PUBLIC ${PROJECT_SOURCE_DIR}/Engine)
-target_include_directories (LiteEngine PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/ImGui)
-target_include_directories (LiteEngine PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/glm)
-target_include_directories (LiteEngine PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/spdlog)
-target_include_directories (LiteEngine PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/SimpleIni)
+target_include_directories (FrameworkRealTimeGlobalIllumination PUBLIC ${PROJECT_SOURCE_DIR}/Engine)
+target_include_directories (FrameworkRealTimeGlobalIllumination PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/ImGui)
+target_include_directories (FrameworkRealTimeGlobalIllumination PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/glm)
+target_include_directories (FrameworkRealTimeGlobalIllumination PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/spdlog)
+target_include_directories (FrameworkRealTimeGlobalIllumination PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/SimpleIni)
 
 # OpenAL
 
 if(NOT MSVC)
 	find_package (OpenAL REQUIRED)
 
-	target_include_directories (LiteEngine PUBLIC ${OPENAL_INCLUDE_DIR})
+	target_include_directories (FrameworkRealTimeGlobalIllumination PUBLIC ${OPENAL_INCLUDE_DIR})
 else(NOT MSVC)
-	target_include_directories (LiteEngine PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/OpenAL/include)
+	target_include_directories (FrameworkRealTimeGlobalIllumination PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/OpenAL/include)
 
 	find_library (OPENAL_LIBRARY NAMES OpenAL OpenAL32 HINTS ${PROJECT_SOURCE_DIR}/3rdparty/OpenAL/lib)
 endif(NOT MSVC)
@@ -73,10 +73,10 @@ endif(NOT MSVC)
 if(NOT MSVC)
 	find_package (Bullet REQUIRED)
 	
-	target_include_directories (LiteEngine PUBLIC ${BULLET_INCLUDE_DIRS})
+	target_include_directories (FrameworkRealTimeGlobalIllumination PUBLIC ${BULLET_INCLUDE_DIRS})
 else(NOT MSVC)
-	target_include_directories (LiteEngine PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/bullet/include)
-	target_include_directories (LiteEngine PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/bullet/include/bullet)
+	target_include_directories (FrameworkRealTimeGlobalIllumination PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/bullet/include)
+	target_include_directories (FrameworkRealTimeGlobalIllumination PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/bullet/include/bullet)
 
 	find_library (BULLET_LIBRARY_COLLISION NAMES BulletCollision HINTS ${PROJECT_SOURCE_DIR}/3rdparty/bullet/lib)
 	find_library (BULLET_LIBRARY_DYNAMICS NAMES BulletDynamics HINTS ${PROJECT_SOURCE_DIR}/3rdparty/bullet/lib)
@@ -87,15 +87,15 @@ else(NOT MSVC)
 endif(NOT MSVC)
 
 if(MSVC)
-	target_include_directories (LiteEngine PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/assimp/include)
-	target_include_directories (LiteEngine PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/OpenAL/include)
-	target_include_directories (LiteEngine PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/GLEW/include)
-	target_include_directories (LiteEngine PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/SDL2/include)
+	target_include_directories (FrameworkRealTimeGlobalIllumination PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/assimp/include)
+	target_include_directories (FrameworkRealTimeGlobalIllumination PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/OpenAL/include)
+	target_include_directories (FrameworkRealTimeGlobalIllumination PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/GLEW/include)
+	target_include_directories (FrameworkRealTimeGlobalIllumination PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/SDL2/include)
 endif(MSVC)
 
 if(MSVC)
 	MACRO(GROUP_SRC SRCS)
-	  foreach(FILE ${LiteEngineSourceFiles}) 
+	  foreach(FILE ${FrameworkRealTimeGlobalIlluminationSourceFiles}) 
 		#convert source file to absolute
 		get_filename_component(ABSOLUTE_PATH "${FILE}" ABSOLUTE)
 		# Get the directory of the absolute source file
@@ -114,12 +114,12 @@ if(MSVC)
 	  endforeach()
 	ENDMACRO(GROUP_SRC)
 
-	group_src (${LiteEngineSourceFiles})
+	group_src (${FrameworkRealTimeGlobalIlluminationSourceFiles})
 endif(MSVC)
 
 # On Windows, we copy required binary files next to the target.
 if (CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
-    add_custom_command(TARGET LiteEngine POST_BUILD
+    add_custom_command(TARGET FrameworkRealTimeGlobalIllumination POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             ${PROJECT_SOURCE_DIR}/3rdparty/assimp/bin/assimp.dll
             ${PROJECT_SOURCE_DIR}/3rdparty/GLEW/bin/glew32.dll
@@ -135,11 +135,11 @@ if (CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
 			$<TARGET_FILE:SimpleIni>
 
             # Destination directory
-            $<TARGET_FILE_DIR:LiteEngine>
+            $<TARGET_FILE_DIR:FrameworkRealTimeGlobalIllumination>
     )
 endif()
 
-target_link_libraries (LiteEngine 
+target_link_libraries (FrameworkRealTimeGlobalIllumination 
 	${OPENGL_LIBRARIES}
 	${GLEW}
 	${SDL2}
@@ -153,17 +153,17 @@ target_link_libraries (LiteEngine
 )
 
 if(NOT MSVC)
-	target_link_libraries (LiteEngine dl)
+	target_link_libraries (FrameworkRealTimeGlobalIllumination dl)
 endif(NOT MSVC)
 
 if(NOT MSVC)
-	target_link_libraries (LiteEngine stdc++fs)
+	target_link_libraries (FrameworkRealTimeGlobalIllumination stdc++fs)
 
-	target_compile_definitions (LiteEngine PRIVATE ENGINE_API=)
+	target_compile_definitions (FrameworkRealTimeGlobalIllumination PRIVATE ENGINE_API=)
 else(NOT MSVC)
-	SET_TARGET_PROPERTIES(LiteEngine PROPERTIES ENABLE_EXPORTS TRUE)
+	SET_TARGET_PROPERTIES(FrameworkRealTimeGlobalIllumination PROPERTIES ENABLE_EXPORTS TRUE)
 
-	target_compile_definitions (LiteEngine PRIVATE "ENGINE_API=__declspec(dllexport)")
+	target_compile_definitions (FrameworkRealTimeGlobalIllumination PRIVATE "ENGINE_API=__declspec(dllexport)")
 endif(NOT MSVC)
 
-target_compile_definitions (LiteEngine PRIVATE GLM_ENABLE_EXPERIMENTAL)
+target_compile_definitions (FrameworkRealTimeGlobalIllumination PRIVATE GLM_ENABLE_EXPERIMENTAL)

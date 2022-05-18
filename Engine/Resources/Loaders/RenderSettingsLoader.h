@@ -17,6 +17,7 @@ protected:
 	void ProcessSSAO (TiXmlElement* xmlElem, RenderSettings* settings);
 	void ProcessSSDO (TiXmlElement* xmlElem, RenderSettings* settings);
 	void ProcessSSR (TiXmlElement* xmlElem, RenderSettings* settings);
+	void ProcessSST (TiXmlElement* xmlElem, RenderSettings* settings);
 	void ProcessTAA (TiXmlElement* xmlElem, RenderSettings* settings);
 	void ProcessVolLighting (TiXmlElement* xmlElem, RenderSettings* settings);
 	void ProcessLightShafts (TiXmlElement* xmlElem, RenderSettings* settings);

@@ -86,7 +86,7 @@ std::vector<PipelineAttribute> LPVIndirectSpecularLightRenderPass::GetCustomAttr
 	lpvSpecularIterations.name = "lpvSpecularIterations";
 
 	lpvSpecularIntensity.value.x = settings.lpv_indirect_specular_intensity;
-	lpvSpecularIterations.value.x = settings.lpv_specular_iterations;
+	lpvSpecularIterations.value.x = settings.lpv_reflection_iterations;
 
 	attributes.push_back (lpvSpecularIntensity);
 	attributes.push_back (lpvSpecularIterations);

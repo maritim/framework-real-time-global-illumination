@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<AnimatedModel name="Test" skinPath="Eve.dae" >
-	<Animation name="Idle" path="Idle.dae" />
-	<Animation name="Walk" path="Walk.dae" />
-</AnimatedModel>

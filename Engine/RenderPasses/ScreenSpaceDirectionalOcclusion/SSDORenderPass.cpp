@@ -14,7 +14,7 @@ bool SSDORenderPass::IsAvailable (const RenderScene* renderScene, const Camera* 
 	 * Always execute screen space directional occlusion render pass
 	*/
 
-	return settings.ssdo_enabled;
+	return settings.indirect_diffuse_enabled;
 }
 
 std::string SSDORenderPass::GetPostProcessFragmentShaderPath () const

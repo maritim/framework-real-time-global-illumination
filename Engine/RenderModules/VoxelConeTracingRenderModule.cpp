@@ -21,10 +21,10 @@
 #include "RenderPasses/VoxelConeTracing/VCTVoxelizationCheckRenderVolumeCollection.h"
 #include "RenderPasses/VoxelConeTracing/VCTDebugCheckRenderVolumeCollection.h"
 
-// #include "RenderPasses/ScreenSpaceAmbientOcclusion/SSAOSamplesGenerationRenderPass.h"
-// #include "RenderPasses/ScreenSpaceAmbientOcclusion/SSAONoiseGenerationRenderPass.h"
-// #include "RenderPasses/ScreenSpaceAmbientOcclusion/SSAORenderPass.h"
-// #include "RenderPasses/ScreenSpaceAmbientOcclusion/SSAOBlurRenderPass.h"
+#include "RenderPasses/ScreenSpaceAmbientOcclusion/SSAOSamplesGenerationRenderPass.h"
+#include "RenderPasses/ScreenSpaceAmbientOcclusion/SSAONoiseGenerationRenderPass.h"
+#include "RenderPasses/ScreenSpaceAmbientOcclusion/SSAORenderPass.h"
+#include "RenderPasses/ScreenSpaceAmbientOcclusion/SSAOBlurRenderPass.h"
 
 #include "RenderPasses/AmbientLight/AmbientLightRenderPass.h"
 
@@ -70,7 +70,6 @@ void VoxelConeTracingRenderModule::Init ()
 			.Attach (new VCTDirectionalLightShadowRenderPass ())
 			.Build ())
 		.Attach (new VoxelMipmapRenderPass ())
-		// .Attach (new VoxelBorderRenderPass ())
 		.Build ());
 	_renderPasses.push_back (ContainerRenderPass::Builder ()
 		.Volume (new VCTVoxelizationCheckRenderVolumeCollection (false))
@@ -79,14 +78,14 @@ void VoxelConeTracingRenderModule::Init ()
 			.Attach (new RSMDirectionalLightAccumulationRenderPass ())
 			.Attach (new VCTDirectionalLightShadowRenderPass ())
 			.Build ())
+		.Attach (ContainerRenderPass::Builder ()
+			.Volume (new IterateOverRenderVolumeCollection (1))
+			.Attach (new SSAOSamplesGenerationRenderPass ())
+			.Attach (new SSAONoiseGenerationRenderPass ())
+			.Attach (new SSAORenderPass ())
+			.Attach (new SSAOBlurRenderPass ())
+			.Build ())
 		.Build ());
-		// .Attach (ContainerRenderPass::Builder ()
-		// 	.Volume (new IterateOverRenderVolumeCollection (1))
-		// 	.Attach (new SSAOSamplesGenerationRenderPass ())
-		// 	.Attach (new SSAONoiseGenerationRenderPass ())
-		// 	.Attach (new SSAORenderPass ())
-		// 	.Attach (new SSAOBlurRenderPass ())
-		// 	.Build ())
 	_renderPasses.push_back (new AmbientLightRenderPass ());
 	_renderPasses.push_back (ContainerRenderPass::Builder ()
 		.Volume (new DirectionalLightContainerRenderVolumeCollection ())
@@ -100,11 +99,7 @@ void VoxelConeTracingRenderModule::Init ()
 	_renderPasses.push_back (ContainerRenderPass::Builder ()
 		.Volume (new IterateOverRenderVolumeCollection (1))
 		.Attach (new IdleRenderPass ())
-		.Attach (ContainerRenderPass::Builder ()
-			.Volume (new IterateOverRenderVolumeCollection (1))
-			.Attach (new SSRRenderPass ())
-			.Attach (new SSRAccumulationRenderPass ())
-			.Build ())
+		.Attach (new IdleRenderPass ())
 		.Attach	(new TAARenderPass ())
 		.Attach (ContainerRenderPass::Builder ()
 			.Volume (new IterateOverRenderVolumeCollection (1))
@@ -122,7 +117,5 @@ void VoxelConeTracingRenderModule::Init ()
 		.Attach (new DeferredBlitRenderPass ())
 		.Build ());
 	_renderPasses.push_back (new ForwardRenderPass ());
-	_renderPasses.push_back (new WindowBlitRenderPass());
 	_renderPasses.push_back (new GUIGizmosRenderPass());
-	_renderPasses.push_back (new GUIRenderPass());
 }

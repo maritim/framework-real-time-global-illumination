@@ -49,6 +49,11 @@ struct RenderSettings : public Object
 	std::size_t ssr_stride;
 	float ssr_intensity;
 
+	bool sst_enabled;
+	std::size_t sst_iterations;
+	float sst_thickness;
+	float sst_intensity;
+
 	bool taa_enabled;
 
 	bool vol_lighting_enabled;
@@ -84,8 +89,10 @@ struct RenderSettings : public Object
 	float rsm_indirect_diffuse_intensity;
 	float rsm_indirect_specular_intensity;
 	float rsm_indirect_refractive_intensity;
-	std::size_t rsm_iterations;
-	float rsm_thickness;
+	std::size_t rsm_reflection_iterations;
+	float rsm_reflection_thickness;
+	std::size_t rsm_refraction_iterations;
+	float rsm_refraction_thickness;
 	float rsm_interpolation_scale;
 	float rsm_min_interpolation_distance;
 	float rsm_min_interpolation_angle;
@@ -103,7 +110,8 @@ struct RenderSettings : public Object
 	float lpv_indirect_diffuse_intensity;
 	float lpv_indirect_specular_intensity;
 	float lpv_indirect_refractive_intensity;
-	std::size_t lpv_specular_iterations;
+	std::size_t lpv_reflection_iterations;
+	std::size_t lpv_refraction_iterations;
 	bool lpv_emissive_voxelization;
 	float lpv_emissive_normal_angle_step;
 	std::size_t lpv_emissive_vpls;

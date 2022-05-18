@@ -10,7 +10,7 @@ bool SSDOInterpolatedRenderPass::IsAvailable (const RenderScene* renderScene, co
 	 * Always execure reflective shadow mapping indirect light render pass
 	*/
 
-	return settings.ssdo_enabled && settings.ssdo_interpolation_enabled;
+	return settings.indirect_diffuse_enabled && settings.ssdo_interpolation_enabled;
 }
 
 std::string SSDOInterpolatedRenderPass::GetPostProcessFragmentShaderPath () const

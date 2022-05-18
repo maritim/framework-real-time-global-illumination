@@ -10,7 +10,7 @@ bool RSMInterpolatedIndirectDiffuseLightRenderPass::IsAvailable (const RenderSce
 	 * Always execure reflective shadow mapping indirect light render pass
 	*/
 
-	return true;
+	return settings.indirect_diffuse_enabled;
 }
 
 std::string RSMInterpolatedIndirectDiffuseLightRenderPass::GetPostProcessFragmentShaderPath () const

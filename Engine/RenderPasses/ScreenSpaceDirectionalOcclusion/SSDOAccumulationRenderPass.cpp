@@ -7,7 +7,7 @@ bool SSDOAccumulationRenderPass::IsAvailable (const RenderScene* renderScene, co
 	 * Check if bloom is enabled
 	*/
 
-	return settings.ssdo_enabled;
+	return settings.indirect_diffuse_enabled;
 }
 
 std::string SSDOAccumulationRenderPass::GetPostProcessFragmentShaderPath () const

@@ -34,7 +34,7 @@ bool SSDOSamplesGenerationRenderPass::IsAvailable (const RenderScene* renderScen
 	 * Always execute screen space directional occlusion samples generation render pass
 	*/
 
-	return true;
+	return settings.indirect_diffuse_enabled;
 }
 
 void SSDOSamplesGenerationRenderPass::Clear ()

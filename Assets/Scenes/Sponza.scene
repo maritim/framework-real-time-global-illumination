@@ -1,24 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<Scene name="VXGI Test">
+<Scene name="Illumination Test">
     <Skybox path="Assets/Skyboxes/Snowlake/Snowlake.sky" />
-    <SceneObject instanceID="41" name="Directional" isActive="true">
-        <Transform>
-            <Position x="0.000000" y="0.000000" z="0.000000" />
-            <Rotation x="-80.000000" y="0.000000" z="0.000000" />
-            <Scale x="1.000000" y="1.000000" z="1.000000" />
-        </Transform>
-        <Components>
-            <Component name="DirectionalLightComponent" intensity="1.000000" castShadows="true">
-                <color r="255" g="255" b="255" a="255" />
-                <shadowInformation cascadesCount="4" bias="0.003000">
-                    <Resolution width="512" height="512" />
-                </shadowInformation>
-            </Component>
-        </Components>
-    </SceneObject>
     <SceneObject instanceID="0" name="Sponza Atrium" isActive="true">
         <Transform>
-            <Position x="0.000000" y="-0.100000" z="0.000000" />
+            <Position x="0.000000" y="0.000000" z="0.000000" />
             <Rotation x="0.000000" y="-0.000000" z="0.000000" />
             <Scale x="0.030000" y="0.030000" z="0.030000" />
         </Transform>
@@ -29,37 +14,7 @@
             <Component name="RigidBodyComponent" mass="0.000000" />
         </Components>
     </SceneObject>
-    <SceneObject instanceID="40" name="Spot" isActive="false">
-        <Transform>
-            <Position x="0.000000" y="3.000000" z="0.600000" />
-            <Rotation x="0.000000" y="-89.980286" z="0.000000" />
-            <Scale x="119.999992" y="120.000000" z="119.999992" />
-        </Transform>
-        <Components>
-            <Component name="SpotLightComponent" intensity="1.000000" castShadows="true" range="120.000000" cutoff="0.000000" outerCutoff="30.000000">
-                <color r="255" g="255" b="255" a="255" />
-                <shadowInformation cascadesCount="1" bias="0.000100">
-                    <Resolution width="512" height="512" />
-                </shadowInformation>
-            </Component>
-        </Components>
-    </SceneObject>
-    <SceneObject instanceID="40" name="Point" isActive="false">
-        <Transform>
-            <Position x="0.000000" y="3.000000" z="0.600000" />
-            <Rotation x="0.000000" y="-0.000000" z="0.000000" />
-            <Scale x="7.000000" y="7.000000" z="7.000000" />
-        </Transform>
-        <Components>
-            <Component name="PointLightComponent" intensity="1.000000" castShadows="false" range="7.000000">
-                <color r="255" g="255" b="255" a="255" />
-                <shadowInformation cascadesCount="1" bias="0.500000">
-                    <Resolution width="512" height="512" />
-                </shadowInformation>
-            </Component>
-        </Components>
-    </SceneObject>
-    <SceneObject instanceID="41" name="Ambient" isActive="true">
+    <SceneObject instanceID="41" name="Ambient Light" isActive="true">
         <Transform>
             <Position x="0.000000" y="0.000000" z="0.000000" />
             <Rotation x="0.000000" y="-0.000000" z="0.000000" />
@@ -68,6 +23,77 @@
         <Components>
             <Component name="AmbientLightComponent" intensity="0.250000">
                 <color r="255" g="255" b="255" a="255" />
+            </Component>
+        </Components>
+    </SceneObject>
+    <SceneObject instanceID="42" name="Translucent Stanford Lucy" isActive="true">
+        <Transform>
+            <Position x="9.829591" y="0.000000" z="-0.689464" />
+            <Rotation x="0.000000" y="-31.728539" z="0.000000" />
+            <Scale x="0.020000" y="0.020000" z="0.020000" />
+        </Transform>
+        <Components>
+            <Component name="RenderObjectComponent" renderStage="1" layer="33">
+                <model path="Assets/Models/LucyTranslucent/Winged_Victory.obj" />
+            </Component>
+        </Components>
+    </SceneObject>
+    <SceneObject instanceID="46" name="Stanford Lucy" isActive="true">
+        <Transform>
+            <Position x="0.000000" y="0.000000" z="-2.013737" />
+            <Rotation x="0.000000" y="-0.000000" z="0.000000" />
+            <Scale x="0.020000" y="0.020000" z="0.020000" />
+        </Transform>
+        <Components>
+            <Component name="RenderObjectComponent" renderStage="1" layer="1">
+                <model path="Assets/Models/Lucy/Winged_Victory.obj" />
+            </Component>
+        </Components>
+    </SceneObject>
+    <SceneObject instanceID="43" name="Area Lights" isActive="true">
+        <Transform>
+            <Position x="3.985581" y="5.006920" z="-4.067295" />
+            <Rotation x="0.000000" y="0.405938" z="0.000000" />
+            <Scale x="5.000000" y="3.000000" z="2.000000" />
+        </Transform>
+        <Components />
+    </SceneObject>
+    <SceneObject instanceID="44" name="Area Light" isActive="true">
+        <Transform parentID="43">
+            <Position x="3.985582" y="5.006927" z="-4.067297" />
+            <Rotation x="180.000137" y="-0.405940" z="180.000137" />
+            <Scale x="5.002287" y="3.000000" z="1.999085" />
+        </Transform>
+        <Components>
+            <Component name="RenderObjectComponent" renderStage="1" layer="1">
+                <model path="Assets/Models/Quad/Quad.obj" />
+            </Component>
+        </Components>
+    </SceneObject>
+    <SceneObject instanceID="45" name="Area Light" isActive="true">
+        <Transform parentID="43">
+            <Position x="3.985582" y="5.006927" z="-4.067297" />
+            <Rotation x="0.000000" y="0.405938" z="0.000000" />
+            <Scale x="5.002287" y="3.000000" z="1.999085" />
+        </Transform>
+        <Components>
+            <Component name="RenderObjectComponent" renderStage="1" layer="1">
+                <model path="Assets/Models/Quad/Quad.obj" />
+            </Component>
+        </Components>
+    </SceneObject>
+    <SceneObject instanceID="41" name="Directional Light" isActive="true">
+        <Transform>
+            <Position x="0.000000" y="0.000000" z="0.000000" />
+            <Rotation x="-72.301521" y="0.000000" z="0.000000" />
+            <Scale x="1.000000" y="1.000000" z="1.000000" />
+        </Transform>
+        <Components>
+            <Component name="DirectionalLightComponent" intensity="1.000000" castShadows="true">
+                <color r="255" g="255" b="255" a="255" />
+                <shadowInformation cascadesCount="4" bias="0.003000">
+                    <Resolution width="512" height="512" />
+                </shadowInformation>
             </Component>
         </Components>
     </SceneObject>

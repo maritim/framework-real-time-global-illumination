@@ -94,8 +94,8 @@ std::vector<PipelineAttribute> RSMIndirectSpecularLightRenderPass::GetCustomAttr
 	glm::ivec2 resolution = glm::ivec2 (glm::vec2 (settings.resolution.width, settings.resolution.height) * settings.rsm_scale);
 
 	rsmResolution.value = glm::vec3 (resolution, 0.0f);
-	rsmIterations.value.x = settings.rsm_iterations;
-	rsmThickness.value.x = settings.rsm_thickness;
+	rsmIterations.value.x = settings.rsm_reflection_iterations;
+	rsmThickness.value.x = settings.rsm_reflection_thickness;
 	rsmSpecularIntensity.value.x = settings.rsm_indirect_specular_intensity;
 
 	attributes.push_back (rsmResolution);

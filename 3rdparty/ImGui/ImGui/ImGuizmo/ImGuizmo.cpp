@@ -2406,6 +2406,9 @@ namespace IMGUIZMO_NAMESPACE
       // Scale is always local or matrix will be skewed when applying world scale or oriented matrix
       ComputeContext(view, projection, matrix, (operation & SCALE) ? LOCAL : mode);
 
+      gContext.mDrawList->PushClipRect (ImVec2 (gContext.mX, gContext.mY),
+         ImVec2 (gContext.mX + gContext.mWidth, gContext.mY + gContext.mHeight), false);
+
       // set delta to identity
       if (deltaMatrix)
       {
@@ -2446,6 +2449,8 @@ namespace IMGUIZMO_NAMESPACE
          DrawScaleGizmo(operation, type);
          DrawScaleUniveralGizmo(operation, type);
       }
+
+      gContext.mDrawList->PopClipRect ();
       return manipulated;
    }
 

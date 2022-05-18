@@ -22,34 +22,34 @@ endif(NOT MSVC)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-file (GLOB_RECURSE LiteEditorSourceFiles *)
+file (GLOB_RECURSE EditorSourceFiles *)
 
-add_library (LiteEditor SHARED ${LiteEditorSourceFiles})
-set_property (TARGET LiteEditor PROPERTY POSITION_INDEPENDENT_CODE ON)
+add_library (Editor SHARED ${EditorSourceFiles})
+set_property (TARGET Editor PROPERTY POSITION_INDEPENDENT_CODE ON)
 
-target_include_directories (LiteEditor PUBLIC ${PROJECT_SOURCE_DIR}/Editor)
-target_include_directories (LiteEditor PRIVATE ${PROJECT_SOURCE_DIR}/Engine)
-target_include_directories (LiteEditor PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/ImGui)
-target_include_directories (LiteEditor PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/glm)
-target_include_directories (LiteEditor PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/SimpleIni)
+target_include_directories (Editor PUBLIC ${PROJECT_SOURCE_DIR}/Editor)
+target_include_directories (Editor PRIVATE ${PROJECT_SOURCE_DIR}/Engine)
+target_include_directories (Editor PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/ImGui)
+target_include_directories (Editor PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/glm)
+target_include_directories (Editor PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/SimpleIni)
 
-target_link_libraries (LiteEditor ImGui)
+target_link_libraries (Editor ImGui)
 
 if(NOT MSVC)
 	find_package (Bullet REQUIRED)
 	
-	target_include_directories (LiteEditor PUBLIC ${BULLET_INCLUDE_DIRS})
+	target_include_directories (Editor PUBLIC ${BULLET_INCLUDE_DIRS})
 else(NOT MSVC)
-	target_include_directories (LiteEditor PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/bullet/include)
+	target_include_directories (Editor PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/bullet/include)
 endif(NOT MSVC)
 
 if(MSVC)
-	target_include_directories (LiteEditor PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/include)
+	target_include_directories (Editor PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/include)
 endif(MSVC)
 
 if(MSVC)
 	MACRO(GROUP_SRC SRCS)
-	  foreach(FILE ${LiteEditorSourceFiles}) 
+	  foreach(FILE ${EditorSourceFiles}) 
 		#convert source file to absolute
 		get_filename_component(ABSOLUTE_PATH "${FILE}" ABSOLUTE)
 		# Get the directory of the absolute source file
@@ -68,17 +68,17 @@ if(MSVC)
 	  endforeach()
 	ENDMACRO(GROUP_SRC)
 
-	group_src (${LiteEditorSourceFiles})
+	group_src (${EditorSourceFiles})
 endif(MSVC)
 
 if(NOT MSVC)
-	target_link_libraries (LiteEditor stdc++fs)
+	target_link_libraries (Editor stdc++fs)
 
-	target_compile_definitions (LiteEditor PRIVATE "ENGINE_API=")
+	target_compile_definitions (Editor PRIVATE "ENGINE_API=")
 else(NOT MSVC)
-	target_link_libraries (LiteEditor LiteEngine)
+	target_link_libraries (Editor FrameworkRealTimeGlobalIllumination)
 
-	target_compile_definitions (LiteEditor PRIVATE "ENGINE_API=__declspec(dllimport)")
+	target_compile_definitions (Editor PRIVATE "ENGINE_API=__declspec(dllimport)")
 endif(NOT MSVC)
 
-target_compile_definitions (LiteEditor PRIVATE GLM_ENABLE_EXPERIMENTAL)
+target_compile_definitions (Editor PRIVATE GLM_ENABLE_EXPERIMENTAL)

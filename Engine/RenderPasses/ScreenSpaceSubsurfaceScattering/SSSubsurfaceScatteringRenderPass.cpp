@@ -10,7 +10,7 @@ bool SSSubsurfaceScatteringRenderPass::IsAvailable (const RenderScene* renderSce
 	 * Check if screen space reflection is enabled
 	*/
 
-	return settings.ssr_enabled;
+	return settings.subsurface_scattering_enabled;
 }
 
 std::string SSSubsurfaceScatteringRenderPass::GetPostProcessFragmentShaderPath () const
@@ -20,7 +20,7 @@ std::string SSSubsurfaceScatteringRenderPass::GetPostProcessFragmentShaderPath (
 
 std::string SSSubsurfaceScatteringRenderPass::GetPostProcessVolumeName () const
 {
-	return "PostProcessMapVolume";
+	return "SubsurfaceScatteringMapVolume";
 }
 
 glm::ivec2 SSSubsurfaceScatteringRenderPass::GetPostProcessVolumeResolution (const RenderSettings& settings) const
@@ -30,7 +30,7 @@ glm::ivec2 SSSubsurfaceScatteringRenderPass::GetPostProcessVolumeResolution (con
 
 FramebufferRenderVolume* SSSubsurfaceScatteringRenderPass::CreatePostProcessVolume (const RenderSettings& settings) const
 {
-	Resource<Texture> texture = Resource<Texture> (new Texture ("postProcessMap"));
+	Resource<Texture> texture = Resource<Texture> (new Texture ("subsurfaceScatteringMap"));
 
 	glm::ivec2 size = GetPostProcessVolumeResolution (settings);
 
@@ -72,37 +72,42 @@ std::vector<PipelineAttribute> SSSubsurfaceScatteringRenderPass::GetCustomAttrib
 	 * Attach screen space ambient occlusion attributes to pipeline
 	*/
 
-	PipelineAttribute ssrResolution;
-	PipelineAttribute ssrIterations;
-	PipelineAttribute ssrRoughness;
-	PipelineAttribute ssrThickness;
-	PipelineAttribute ssrStride;
+	PipelineAttribute sstResolution;
+	PipelineAttribute sstIterations;
+	PipelineAttribute sstRoughness;
+	PipelineAttribute sstThickness;
+	PipelineAttribute sstStride;
+	PipelineAttribute sstIntensity;
 
-	ssrResolution.type = PipelineAttribute::AttrType::ATTR_2F;
-	ssrIterations.type = PipelineAttribute::AttrType::ATTR_1I;
-	ssrRoughness.type = PipelineAttribute::AttrType::ATTR_1F;
-	ssrThickness.type = PipelineAttribute::AttrType::ATTR_1F;
-	ssrStride.type = PipelineAttribute::AttrType::ATTR_1I;
+	sstResolution.type = PipelineAttribute::AttrType::ATTR_2F;
+	sstIterations.type = PipelineAttribute::AttrType::ATTR_1I;
+	sstRoughness.type = PipelineAttribute::AttrType::ATTR_1F;
+	sstThickness.type = PipelineAttribute::AttrType::ATTR_1F;
+	sstStride.type = PipelineAttribute::AttrType::ATTR_1I;
+	sstIntensity.type = PipelineAttribute::AttrType::ATTR_1F;
 
-	ssrResolution.name = "ssrResolution";
-	ssrIterations.name = "ssrIterations";
-	ssrRoughness.name = "ssrRoughness";
-	ssrThickness.name = "ssrThickness";
-	ssrStride.name = "ssrStride";
+	sstResolution.name = "sstResolution";
+	sstIterations.name = "sstIterations";
+	sstRoughness.name = "sstRoughness";
+	sstThickness.name = "sstThickness";
+	sstStride.name = "sstStride";
+	sstIntensity.name = "sstIntensity";
 
 	glm::ivec2 resolution = glm::ivec2 (glm::vec2 (settings.resolution.width, settings.resolution.height) * settings.ssr_scale);
 
-	ssrResolution.value = glm::vec3 (resolution, 0.0f);
-	ssrIterations.value.x = settings.ssr_iterations;
-	ssrRoughness.value.x = settings.ssr_roughness;
-	ssrThickness.value.x = settings.ssr_thickness;
-	ssrStride.value.x = settings.ssr_stride;
+	sstResolution.value = glm::vec3 (resolution, 0.0f);
+	sstIterations.value.x = settings.sst_iterations;
+	sstRoughness.value.x = settings.ssr_roughness;
+	sstThickness.value.x = settings.sst_thickness;
+	sstStride.value.x = settings.ssr_stride;
+	sstIntensity.value.x = settings.sst_intensity;
 
-	attributes.push_back (ssrResolution);
-	attributes.push_back (ssrIterations);
-	attributes.push_back (ssrRoughness);
-	attributes.push_back (ssrThickness);
-	attributes.push_back (ssrStride);
+	attributes.push_back (sstResolution);
+	attributes.push_back (sstIterations);
+	attributes.push_back (sstRoughness);
+	attributes.push_back (sstThickness);
+	attributes.push_back (sstStride);
+	attributes.push_back (sstIntensity);
 
 	return attributes;
 }

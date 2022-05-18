@@ -14,11 +14,11 @@ uniform mat4 inverseViewMatrix;
 uniform vec3 cameraPosition;
 uniform vec2 cameraZLimits;
 
-uniform vec2 ssrResolution;
-uniform int ssrIterations;
-uniform float ssrRoughness;
-uniform float ssrThickness;
-uniform int ssrStride;
+uniform vec2 sstResolution;
+uniform int sstIterations;
+uniform float sstRoughness;
+uniform float sstThickness;
+uniform int sstStride;
 
 uniform sampler2D postProcessMap;
 
@@ -51,7 +51,7 @@ vec2 CalcScreenSpaceSubsurfaceScattering (vec3 in_position, vec3 in_normal, floa
 	vec3 reflectionViewPos;
 
 	bool intersect = traceScreenSpaceRay (in_position, refractiveDirection, pixelProjectionMatrix,
-		gPositionMap, screenSize, 5, -cameraZLimits.x, 1, 2, ssrIterations,
+		gPositionMap, screenSize, sstThickness, -cameraZLimits.x, 1, 2, sstIterations,
 		1000.0f, reflectionPos, reflectionViewPos);
 
 	if (intersect == false) {
@@ -65,7 +65,7 @@ void main()
 {
 	vec2 texCoord = CalcTexCoord();
 	vec3 in_diffuse = texture (postProcessMap, texCoord).xyz;
-	vec3 in_position = texture (gTrPositionMap, texCoord).xyz;
+	vec3 in_tr_position = texture (gTrPositionMap, texCoord).xyz;
 	vec3 in_normal = texture (gTrNormalMap, texCoord).xyz;
 	float in_refractiveIndex = texture (gTrNormalMap, texCoord).w;
 	float in_transparency = texture (gTrDiffuseMap, texCoord).w;
@@ -74,13 +74,13 @@ void main()
 
 	vec2 reflectionPos = vec2 (0.0f);
 
+	out_color = vec3 (0.0f);
+
 	if (in_transparency < 1.0f) {
-		reflectionPos = CalcScreenSpaceSubsurfaceScattering (in_position, in_normal, in_refractiveIndex);
+		reflectionPos = CalcScreenSpaceSubsurfaceScattering (in_tr_position, in_normal, in_refractiveIndex);
 
 		vec3 in_light = texture (postProcessMap, reflectionPos).xyz;
 
-		out_color = mix (in_diffuse, in_light, in_transparency);
-	} else {
-		out_color = in_diffuse;
+		out_color = in_light;
 	}
 }

@@ -27,7 +27,7 @@
 #include "Renderer/Pipeline.h"
 
 // Change this
-#define ENGINE_SETTINGS_PATH "Assets/LiteEditor.ini"
+#define ENGINE_SETTINGS_PATH "Assets/Editor.ini"
 
 /*
  * TODO (Medium Priority): Refactor initialization responsabilities

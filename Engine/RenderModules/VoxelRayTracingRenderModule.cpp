@@ -39,7 +39,5 @@ void VoxelRayTracingRenderModule::Init ()
 		.Attach (new VoxelMipmapRenderPass ())
 		.Build ());
 	_renderPasses.push_back (new VRTRenderPass ());
-	_renderPasses.push_back (new WindowBlitRenderPass ());
 	_renderPasses.push_back (new GUIGizmosRenderPass ());
-	_renderPasses.push_back (new GUIRenderPass ());
 }

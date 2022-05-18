@@ -10,7 +10,7 @@ bool LPVIndirectDiffuseLightRenderPass::IsAvailable (const RenderScene* renderSc
 	 * Always execure light propagation volumes indirect light render pass
 	*/
 
-	return true;
+	return settings.indirect_diffuse_enabled;
 }
 
 std::string LPVIndirectDiffuseLightRenderPass::GetPostProcessFragmentShaderPath () const

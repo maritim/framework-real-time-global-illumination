@@ -95,32 +95,26 @@ void EditorRenderingSettings::ShowRenderingSettingsWindow ()
 	renderModes ["ReflectiveShadowMappingRenderModule"] = 1;
 	renderModes ["LightPropagationVolumesRenderModule"] = 2;
 	renderModes ["VoxelConeTracingRenderModule"] = 3;
-	renderModes ["ScreenSpaceDirectionalOcclusionRenderModule"] = 4;
-	renderModes ["TemporalReflectiveShadowMappingRenderModule"] = 5;
-	renderModes ["HybridGlobalIlluminationRenderModule"] = 6;
+	renderModes ["ScreenSpaceGlobalIlluminationRenderModule"] = 4;
 
 	int lastRenderMode = renderModes [_settings->renderMode];
 	int renderMode = lastRenderMode;
 
-	const char* items[] = { "Direct Light",
-		"Reflective Shadow Mapping",
+	const char* items[] = { "Direct Illumiantion",
+		"Reflective Shadow Maps",
 		"Light Propagation Volumes",
 		"Voxel Cone Tracing",
-		"Screen Space Global Illumination",
-		"Temporal Reflective Shadow Mapping",
-		"Hybrid Global Illumiantion"
+		"Screen Space Global Illumination"
 	};
 
-	ImGui::Combo("Render Module", &renderMode, items, 7);
+	ImGui::Combo("Render Module", &renderMode, items, 5);
 
 	const char* srenderModes[] = {
 		"DirectLightingRenderModule",
 		"ReflectiveShadowMappingRenderModule",
 		"LightPropagationVolumesRenderModule",
 		"VoxelConeTracingRenderModule",
-		"ScreenSpaceDirectionalOcclusionRenderModule",
-		"TemporalReflectiveShadowMappingRenderModule",
-		"HybridGlobalIlluminationRenderModule"
+		"ScreenSpaceGlobalIlluminationRenderModule"
 	};
 
 	if (lastRenderMode != renderMode) {
@@ -129,7 +123,8 @@ void EditorRenderingSettings::ShowRenderingSettingsWindow ()
 
 	ImGui::Separator ();
 
-	ImGui::Checkbox ("Enable Indirect Specular", &_settings->indirect_specular_enabled);
+	ImGui::Checkbox ("Enable Indirect Diffuse", &_settings->indirect_diffuse_enabled);
+	ImGui::Checkbox ("Enable Glossy Reflections", &_settings->indirect_specular_enabled);
 	ImGui::Checkbox ("Enable Subsurface Scattering", &_settings->subsurface_scattering_enabled);
 
 	ImGui::PushID ("DeferredDebug");
@@ -144,7 +139,7 @@ void EditorRenderingSettings::ShowRenderingSettingsWindow ()
 
 			auto geometryBufferSize = geometryBuffer->GetFramebuffer ()->GetTexture (0)->GetSize ();
 
-			int windowWidth = ImGui::GetWindowWidth() * 0.95f;
+			int windowWidth = ImGui::GetContentRegionAvail().x * 0.95f;
 
 			int geometryBufferWidth = windowWidth;
 			int geometryBufferHeight = ((float) geometryBufferSize.height / geometryBufferSize.width) * geometryBufferWidth;
@@ -179,50 +174,109 @@ void EditorRenderingSettings::ShowRenderingSettingsWindow ()
 
     // ImGui::Spacing();
 
-	if (ImGui::CollapsingHeader ("Reflective Shadow Mapping")) {
+	if (ImGui::CollapsingHeader ("Reflective Shadow Maps")) {
 
-		float scale = _settings->rsm_scale;
-		ImGui::InputFloat ("Scale", &scale);
-		if (scale > 0) {
-			_settings->rsm_scale = scale;
+		auto rsmStat = StatisticsManager::Instance ()->GetStatisticsObject <RSMStatisticsObject> ();
+
+		if (ImGui::TreeNode ("Diffuse Indirect Illumination")) {
+
+			std::size_t limit1 = 1, limit2 = 500;
+			ImGui::SliderScalar ("Sample Count", ImGuiDataType_U32, &_settings->rsm_samples, &limit1, &limit2);
+
+			ImGui::SliderFloat ("Sampling Radius", &_settings->rsm_radius, 0.001, 1.0);
+
+			ImGui::InputFloat ("Intensity", &_settings->rsm_indirect_diffuse_intensity, 0.1);
+
+			ImGui::Separator();
+
+			ImGui::Text ("Screen Interpolation");
+
+			ImGui::Checkbox ("Shown Non Interpolated Pixels", &_settings->rsm_debug_interpolation);
+
+			float interpolationScale = _settings->rsm_interpolation_scale;
+			ImGui::InputFloat ("Interpolation Scale", &interpolationScale);
+			if (interpolationScale > 0) {
+				_settings->rsm_interpolation_scale = interpolationScale;
+			}
+
+			ImGui::InputFloat ("Min Interpolation Distance", &_settings->rsm_min_interpolation_distance, 0.1);
+			ImGui::InputFloat ("Min Interpolation Angle (deg)", &_settings->rsm_min_interpolation_angle, 0.1);
+
+			ImGui::Separator ();
+
+			if (ImGui::TreeNode ("Debug")) {
+
+				ShowImage ("Screen Space Interpolation Diffuse Indirect Illumination Map", rsmStat->rsmInterpolatedIndirectDiffuseMapVolume);
+
+				ShowImage ("Diffuse Indirect Illumination Map", rsmStat->rsmIndirectDiffuseMapVolume);
+
+				ImGui::TreePop();
+			}
+
+			ImGui::TreePop();
 		}
 
-		std::size_t limit1 = 1, limit2 = 500;
-		ImGui::SliderScalar ("Samples Size", ImGuiDataType_U32, &_settings->rsm_samples, &limit1, &limit2);
+		if (ImGui::TreeNode ("Glossy Reflections")) {
 
-		ImGui::SliderFloat ("Sample Radius", &_settings->rsm_radius, 0.001, 1.0);
+			ImGui::InputFloat ("Intensity", &_settings->rsm_indirect_specular_intensity, 0.1);
 
-		ImGui::Separator();
+			ImGui::Separator();
 
-		ImGui::Checkbox ("Enable Ambient Occlusion", &_settings->rsm_ao_enabled);
+			std::size_t step = 1;
+			ImGui::InputScalar ("Iteration Count", ImGuiDataType_U32, &_settings->rsm_reflection_iterations, &step);
 
-		ImGui::Separator();
+			ImGui::InputFloat ("Sample Thickness", &_settings->rsm_reflection_thickness, 0.1);
 
-		ImGui::PushID ("RSMIndirect Light Intensity");
-		ImGui::InputFloat ("Indirect Diffuse Light Intensity", &_settings->rsm_indirect_diffuse_intensity, 0.1);
-		ImGui::InputFloat ("Indirect Specular Light Intensity", &_settings->rsm_indirect_specular_intensity, 0.1);
-		ImGui::InputFloat ("Indirect Refractive Light Intensity", &_settings->rsm_indirect_refractive_intensity, 0.1);
-		ImGui::PopID ();
+			ImGui::Separator();
 
-		ImGui::Separator();
+			if (ImGui::TreeNode ("Debug")) {
 
-		std::size_t step = 1;
-		ImGui::InputScalar ("Sample Iterations", ImGuiDataType_U32, &_settings->rsm_iterations, &step);
+				ShowImage ("Glossy Reflections Map", rsmStat->rsmIndirectSpecularMapVolume);
 
-		ImGui::InputFloat ("Thickness", &_settings->rsm_thickness, 0.1);
+				ImGui::TreePop();
+			}
 
-		ImGui::Separator();
-
-		ImGui::Checkbox ("Shown Non Interpolated Pixels", &_settings->rsm_debug_interpolation);
-
-		float interpolationScale = _settings->rsm_interpolation_scale;
-		ImGui::InputFloat ("Interpolation Scale", &interpolationScale);
-		if (interpolationScale > 0) {
-			_settings->rsm_interpolation_scale = interpolationScale;
+			ImGui::TreePop();
 		}
 
-		ImGui::InputFloat ("Min Interpolation Distance", &_settings->rsm_min_interpolation_distance, 0.1);
-		ImGui::InputFloat ("Min Interpolation Angle (deg)", &_settings->rsm_min_interpolation_angle, 0.1);
+		if (ImGui::TreeNode ("Refraction")) {
+
+			ImGui::InputFloat ("Intensity", &_settings->rsm_indirect_refractive_intensity, 0.1);
+
+			ImGui::Separator();
+
+			std::size_t step = 1;
+			ImGui::InputScalar ("Iteration Count", ImGuiDataType_U32, &_settings->rsm_refraction_iterations, &step);
+
+			ImGui::InputFloat ("Sample Thickness", &_settings->rsm_refraction_thickness, 0.1);
+
+			ImGui::Separator();
+
+			if (ImGui::TreeNode ("Debug")) {
+
+				ShowImage ("Subsurface Scattering Map", rsmStat->rsmSubsurfaceScatteringMapVolume);
+
+				ImGui::TreePop();
+			}
+
+			ImGui::TreePop();
+		}
+
+		if (ImGui::TreeNode ("Ambient Occlusion")) {
+
+			ImGui::Checkbox ("Enable Ambient Occlusion", &_settings->rsm_ao_enabled);
+
+			ImGui::Separator();
+
+			if (ImGui::TreeNode ("Debug")) {
+
+				ShowImage ("Ambient Occlusion Map", rsmStat->rsmAmbientOcclusionMapVolume);
+
+				ImGui::TreePop();
+			}
+
+			ImGui::TreePop();
+		}
 
 		ImGui::Separator();
 
@@ -230,65 +284,19 @@ void EditorRenderingSettings::ShowRenderingSettingsWindow ()
 
 		if (ImGui::TreeNode ("Debug")) {
 
-			auto rsmStat = StatisticsManager::Instance ()->GetStatisticsObject <RSMStatisticsObject> ();
+			if (rsmStat->rsmVolume != nullptr) {
 
-			if (ImGui::TreeNode ("Reflective Shadow Map")) {
-				if (rsmStat->rsmVolume != nullptr) {
+				FramebufferRenderVolume* rsmVolume = rsmStat->rsmVolume;
 
-					FramebufferRenderVolume* rsmVolume = rsmStat->rsmVolume;
+				int windowWidth = ImGui::GetContentRegionAvail().x * 0.95f;
 
-					int windowWidth = ImGui::GetWindowWidth() * 0.65f;
+				ShowImage ("Depth Map", rsmVolume->GetFramebufferView ()->GetDepthTextureView ()->GetGPUIndex (), glm::ivec2 (windowWidth, windowWidth));
 
-					ImGui::Text ("Depth Map");
-					ShowImage (rsmVolume->GetFramebufferView ()->GetDepthTextureView ()->GetGPUIndex (), glm::ivec2 (windowWidth, windowWidth));
+				ShowImage ("Position Map", rsmVolume->GetFramebufferView ()->GetTextureView (0)->GetGPUIndex (), glm::ivec2 (windowWidth, windowWidth));
 
-					ImGui::Text ("Position Map");
-					ShowImage (rsmVolume->GetFramebufferView ()->GetTextureView (0)->GetGPUIndex (), glm::ivec2 (windowWidth, windowWidth));
+				ShowImage ("Normal Map", rsmVolume->GetFramebufferView ()->GetTextureView (1)->GetGPUIndex (), glm::ivec2 (windowWidth, windowWidth));
 
-					ImGui::Text ("Normal Map");
-					ShowImage (rsmVolume->GetFramebufferView ()->GetTextureView (1)->GetGPUIndex (), glm::ivec2 (windowWidth, windowWidth));
-
-					ImGui::Text ("Flux Map");
-					ShowImage (rsmVolume->GetFramebufferView ()->GetTextureView (2)->GetGPUIndex (), glm::ivec2 (windowWidth, windowWidth));
-				}
-
-				ImGui::TreePop();
-			}
-
-			if (ImGui::TreeNode ("Indirect Light")) {
-				if (rsmStat->rsmIndirectDiffuseMapVolume != nullptr) {
-
-					int windowWidth = ImGui::GetWindowWidth() * 0.95f;
-
-					FramebufferRenderVolume* rsmIndirectDiffuseMapVolume = rsmStat->rsmIndirectDiffuseMapVolume;
-					FramebufferRenderVolume* rsmIndirectSpecularMapVolume = rsmStat->rsmIndirectSpecularMapVolume;
-					FramebufferRenderVolume* rsmSubsurfaceScatteringMapVolume = rsmStat->rsmSubsurfaceScatteringMapVolume;
-					FramebufferRenderVolume* rsmAmbientOcclusionMapVolume = rsmStat->rsmAmbientOcclusionMapVolume;
-
-					FramebufferRenderVolume* rsmInterpolatedIndirectDiffuseMapVolume = rsmStat->rsmInterpolatedIndirectDiffuseMapVolume;
-
-					auto rsmMapSize = rsmIndirectDiffuseMapVolume->GetFramebuffer ()->GetTexture (0)->GetSize ();
-
-					int rsmMapWidth = windowWidth;
-					int rsmMapHeight = ((float) rsmMapSize.height / rsmMapSize.width) * rsmMapWidth;
-
-					ImGui::Text ("Screen Space Interpolation Indirect Diffuse Light Map");
-					ShowImage (rsmInterpolatedIndirectDiffuseMapVolume->GetFramebufferView ()->GetTextureView (0)->GetGPUIndex (), glm::ivec2 (rsmMapWidth, rsmMapHeight));
-
-					ImGui::Text ("Indirect Diffuse Light Map");
-					ShowImage (rsmIndirectDiffuseMapVolume->GetFramebufferView ()->GetTextureView (0)->GetGPUIndex (), glm::ivec2 (rsmMapWidth, rsmMapHeight));
-
-					ImGui::Text ("Indirect Specular Light Map");
-					ShowImage (rsmIndirectSpecularMapVolume->GetFramebufferView ()->GetTextureView (0)->GetGPUIndex (), glm::ivec2 (rsmMapWidth, rsmMapHeight));
-
-					ImGui::Text ("Subsurface Scattering Map");
-					ShowImage (rsmSubsurfaceScatteringMapVolume->GetFramebufferView ()->GetTextureView (0)->GetGPUIndex (), glm::ivec2 (rsmMapWidth, rsmMapHeight));
-
-					ImGui::Text ("Ambient Occlusion Map");
-					ShowImage (rsmAmbientOcclusionMapVolume->GetFramebufferView ()->GetTextureView (0)->GetGPUIndex (), glm::ivec2 (rsmMapWidth, rsmMapHeight));
-				}
-
-				ImGui::TreePop();
+				ShowImage ("Flux Map", rsmVolume->GetFramebufferView ()->GetTextureView (2)->GetGPUIndex (), glm::ivec2 (windowWidth, windowWidth));
 			}
 
 			ImGui::TreePop();
@@ -301,72 +309,73 @@ void EditorRenderingSettings::ShowRenderingSettingsWindow ()
 
 	if (ImGui::CollapsingHeader ("Light Propagation Volumes")) {
 
-		ImGui::InputScalar ("Volume Size", ImGuiDataType_U32, &_settings->lpv_volume_size);
-		ImGui::InputScalar ("Iterations", ImGuiDataType_U32, &_settings->lpv_iterations);
+		auto lpvStat = StatisticsManager::Instance ()->GetStatisticsObject <LPVStatisticsObject> ();
 
-		ImGui::InputFloat ("Light Injection Bias", &_settings->lpv_injection_bias, 0.1);
+		ImGui::InputScalar ("LPV Resolution (^3)", ImGuiDataType_U32, &_settings->lpv_volume_size);
+		ImGui::InputScalar ("Iteration Count", ImGuiDataType_U32, &_settings->lpv_iterations);
 
-		ImGui::Checkbox ("Geometry Occlusion", &_settings->lpv_geometry_occlusion);
+		ImGui::Checkbox ("Use Geometry Occlusion", &_settings->lpv_geometry_occlusion);
 
-		ImGui::Separator();
+		ImGui::Separator ();
 
-		ImGui::PushID ("LPVIndirect Light Intensity");
-		ImGui::InputFloat ("Indirect Diffuse Light Intensity", &_settings->lpv_indirect_diffuse_intensity, 0.1);
-		ImGui::InputFloat ("Indirect Specular Light Intensity", &_settings->lpv_indirect_specular_intensity, 0.1);
-		ImGui::InputFloat ("Indirect Refractive Intensity", &_settings->lpv_indirect_refractive_intensity, 0.1);
-		ImGui::PopID ();
+		if (ImGui::TreeNode ("Diffuse Indirect Illumination")) {
 
-		ImGui::InputScalar ("Specular Iterations", ImGuiDataType_U32, &_settings->lpv_specular_iterations);
+			ImGui::InputFloat ("Intensity", &_settings->lpv_indirect_diffuse_intensity, 0.1);
 
-		ImGui::Separator();
+			ImGui::Separator();
 
-		ImGui::Checkbox ("Emissive Voxelization", &_settings->lpv_emissive_voxelization);
-		ImGui::SliderFloat ("Emissive Normal Angle Step", &_settings->lpv_emissive_normal_angle_step, 1.0f, 90.0f);
+			if (ImGui::TreeNode ("Debug")) {
 
-		ImGui::Checkbox ("Emissive Cache", &_settings->lpv_emissive_cache);
-		ImGui::InputScalar ("VPL Count", ImGuiDataType_U32, &_settings->lpv_emissive_vpls);
+				ShowImage ("Diffuse Indirect Illumination Map", lpvStat->lpvIndirectDiffuseMapVolume);
 
-		ImGui::Checkbox ("Textured Area Lights", &_settings->lpv_emissive_textured);
-
-		ImGui::Separator();
-
-		ImGui::PushID ("LPVDebug");
-
-		if (ImGui::TreeNode ("Debug")) {
-
-			auto lpvStat = StatisticsManager::Instance ()->GetStatisticsObject <LPVStatisticsObject> ();
-
-			if (lpvStat->lpvIndirectDiffuseMapVolume != nullptr) {
-
-				int windowWidth = ImGui::GetWindowWidth() * 0.95f;
-
-				FramebufferRenderVolume* lpvIndirectDiffuseMapVolume = lpvStat->lpvIndirectDiffuseMapVolume;
-				FramebufferRenderVolume* lpvIndirectSpecularMapVolume = lpvStat->lpvIndirectSpecularMapVolume;
-				FramebufferRenderVolume* lpvSubsurfaceScatteringMapVolume = lpvStat->lpvSubsurfaceScatteringMapVolume;
-				FramebufferRenderVolume* lpvAmbientOcclusionMapVolume = lpvStat->lpvAmbientOcclusionMapVolume;
-
-				auto lpvMapSize = lpvIndirectDiffuseMapVolume->GetFramebuffer ()->GetTexture (0)->GetSize ();
-
-				int lpvMapWidth = windowWidth;
-				int lpvMapHeight = ((float) lpvMapSize.height / lpvMapSize.width) * lpvMapWidth;
-
-				ImGui::Text ("Indirect Diffuse Light Map");
-				ShowImage (lpvIndirectDiffuseMapVolume->GetFramebufferView ()->GetTextureView (0)->GetGPUIndex (), glm::ivec2 (lpvMapWidth, lpvMapHeight));
-
-				ImGui::Text ("Indirect Specular Light Map");
-				ShowImage (lpvIndirectSpecularMapVolume->GetFramebufferView ()->GetTextureView (0)->GetGPUIndex (), glm::ivec2 (lpvMapWidth, lpvMapHeight));
-
-				ImGui::Text ("Subsurface Scattering Map");
-				ShowImage (lpvSubsurfaceScatteringMapVolume->GetFramebufferView ()->GetTextureView (0)->GetGPUIndex (), glm::ivec2 (lpvMapWidth, lpvMapHeight));
-
-				ImGui::Text ("Subsurface Scattering Map");
-				ShowImage (lpvAmbientOcclusionMapVolume->GetFramebufferView ()->GetTextureView (0)->GetGPUIndex (), glm::ivec2 (lpvMapWidth, lpvMapHeight));
+				ImGui::TreePop();
 			}
 
 			ImGui::TreePop();
 		}
 
-		ImGui::PopID ();
+		if (ImGui::TreeNode ("Glossy Reflections")) {
+
+			ImGui::InputFloat ("Intensity", &_settings->lpv_indirect_specular_intensity, 0.1);
+
+			ImGui::InputScalar ("Iteration Count", ImGuiDataType_U32, &_settings->lpv_reflection_iterations);
+
+			ImGui::Separator();
+
+			if (ImGui::TreeNode ("Debug")) {
+
+				ShowImage ("Glossy Reflections Map", lpvStat->lpvIndirectSpecularMapVolume);
+
+				ImGui::TreePop();
+			}
+
+			ImGui::TreePop();
+		}
+
+		if (ImGui::TreeNode ("Refraction")) {
+
+			ImGui::InputFloat ("Intensity", &_settings->lpv_indirect_refractive_intensity, 0.1);
+
+			ImGui::InputScalar ("Iteration Count", ImGuiDataType_U32, &_settings->lpv_refraction_iterations);
+
+			ImGui::Separator();
+
+			if (ImGui::TreeNode ("Debug")) {
+
+				ShowImage ("Subsurface Scattering Map", lpvStat->lpvSubsurfaceScatteringMapVolume);
+
+				ImGui::TreePop();
+			}
+
+			ImGui::TreePop();
+		}
+
+		if (ImGui::TreeNode ("Area Lights Direct Illumination")) {
+
+			ImGui::InputScalar ("Sample Count/Triangle", ImGuiDataType_U32, &_settings->lpv_emissive_vpls);
+
+			ImGui::TreePop();
+		}
 	}
 
 	ImGui::Spacing ();
@@ -377,12 +386,14 @@ void EditorRenderingSettings::ShowRenderingSettingsWindow ()
 			_continuousVoxelizationReset = false;
 		}
 
+		auto vctStat = StatisticsManager::Instance ()->GetStatisticsObject <VCTStatisticsObject> ();
+
 		std::size_t lastVoxelVolumeSize = _settings->vct_voxels_size;
 		bool lastVoxelBordering = _settings->vct_bordering;
 		std::size_t lastVolumeMipmapLevels = _settings->vct_mipmap_levels;
 
-		ImGui::InputScalar ("Voxel Volume Size", ImGuiDataType_U32, &_settings->vct_voxels_size);
-		ImGui::Checkbox ("Continuous Voxelization", &_settings->vct_continuous_voxelization);
+		ImGui::InputScalar ("Voxels Resolution (^3)", ImGuiDataType_U32, &_settings->vct_voxels_size);
+		ImGui::Checkbox ("Use Continuous Voxelization", &_settings->vct_continuous_voxelization);
 		// ImGui::Checkbox ("Voxel Volume Bordering", &_settings->vct_bordering);
 
 		std::size_t speed = 1;
@@ -393,45 +404,103 @@ void EditorRenderingSettings::ShowRenderingSettingsWindow ()
 
 		ImGui::Separator ();
 
-		ImGui::PushID ("Voxel Indirect Light Intensity");
-		ImGui::InputFloat ("Indirect Diffuse Light Intensity", &_settings->vct_indirect_diffuse_intensity, 0.1f);
-		ImGui::InputFloat ("Indirect Specular Light Intensity", &_settings->vct_indirect_specular_intensity, 0.1f);
-		ImGui::InputFloat ("Indirect Refractive Light Intensity", &_settings->vct_indirect_refractive_intensity, 0.1f);
-		ImGui::PopID ();
+		if (ImGui::TreeNode ("Diffuse Indirect Illumination")) {
 
-        ImGui::Separator();
+			ImGui::InputFloat ("Intensity", &_settings->vct_indirect_diffuse_intensity, 0.1f);
 
-		ImGui::SliderFloat ("Diffuse Cone Distance", &_settings->vct_diffuse_cone_distance, 0.0f, 1.0f);
-		ImGui::SliderFloat ("Diffuse Origin Bias", &_settings->vct_diffuse_origin_bias, 0.0f, 1.0f);
+	        ImGui::Separator();
 
-        ImGui::Separator();
+			ImGui::SliderFloat ("Cone Distance (Voxels Space)", &_settings->vct_diffuse_cone_distance, 0.0f, 1.0f);
 
-		ImGui::SliderFloat ("Specular Cone Ratio", &_settings->vct_specular_cone_ratio, 0.0f, 1.0f, "%3f", 10.0f);
-		ImGui::SliderFloat ("Specular Cone Distance", &_settings->vct_specular_cone_distance, 0.0f, 1.0f);
-		ImGui::SliderFloat ("Specular Origin Bias", &_settings->vct_specular_origin_bias, 0.0f, 1.0f);
+			ImGui::Separator();
 
-        ImGui::Separator();
+			if (ImGui::TreeNode ("Debug")) {
 
-		ImGui::SliderFloat ("Refractive Cone Ratio", &_settings->vct_refractive_cone_ratio, 0.0f, 1.0f, "%3f", 10.0f);
-		ImGui::SliderFloat ("Refractive Cone Distance", &_settings->vct_refractive_cone_distance, 0.0f, 1.0f);
+				ShowImage ("Diffuse Indirect Illumination Map", vctStat->vctIndirectDiffuseMapVolume);
 
-        ImGui::Separator();
+				ImGui::TreePop();
+			}
 
-        ImGui::Checkbox ("Enable Ambient Occlusion", &_settings->vct_ao_enabled);
-		ImGui::SliderFloat ("Ambient Occlusion Cone Ratio", &_settings->vct_ao_cone_ratio, 0.0f, 1.0f);
-		ImGui::SliderFloat ("Ambient Occlusion Cone Distance", &_settings->vct_ao_cone_distance, 0.0f, 1.0f);
+			ImGui::TreePop();
+		}
 
-        ImGui::Separator();
+		if (ImGui::TreeNode ("Glossy Reflections")) {
 
-        ImGui::Checkbox ("Shadow Cone Cast", &_settings->vct_shadow_cone_enabled);
-		ImGui::SliderFloat ("Shadow Cone Ratio", &_settings->vct_shadow_cone_ratio, 0.0f, 1.0f, "%3f", 10.0f);
-		ImGui::SliderFloat ("Shadow Cone Distance", &_settings->vct_shadow_cone_distance, 0.0f, 1.0f);
+			ImGui::InputFloat ("Intensity", &_settings->vct_indirect_specular_intensity, 0.1f);
 
-        ImGui::Separator();
+			ImGui::Separator();
 
-        ImGui::Checkbox ("Temporal Filter Enabled", &_settings->vct_temporal_filter_enabled);
+			ImGui::SliderFloat ("Cone Radius/Height", &_settings->vct_specular_cone_ratio, 0.0f, 1.0f, "%3f", 10.0f);
+			ImGui::SliderFloat ("Cone Distance (Voxels Space)", &_settings->vct_specular_cone_distance, 0.0f, 1.0f);
 
-		// ImGui::SliderFloat ("Origin Bias", &_settings->vct_origin_bias, 0.0f, 1.0f, "%5f", 10.0f);
+	        ImGui::Separator();
+
+			if (ImGui::TreeNode ("Debug")) {
+
+				ShowImage ("Glossy Reflections Map", vctStat->vctIndirectSpecularMapVolume);
+
+				ImGui::TreePop();
+			}
+
+			ImGui::TreePop();
+		}
+
+		if (ImGui::TreeNode ("Subsurface Scattering")) {
+
+			ImGui::InputFloat ("Intensity", &_settings->vct_indirect_refractive_intensity, 0.1f);
+
+			ImGui::Separator();
+
+			ImGui::SliderFloat ("Cone Radius/Height", &_settings->vct_refractive_cone_ratio, 0.0f, 1.0f, "%3f", 10.0f);
+			ImGui::SliderFloat ("Cone Distance (Voxels Space)", &_settings->vct_refractive_cone_distance, 0.0f, 1.0f);
+
+	        ImGui::Separator();
+
+			if (ImGui::TreeNode ("Debug")) {
+
+				ShowImage ("Subsurface Scattering Map", vctStat->vctSubsurfaceScatteringMapVolume);
+
+				ImGui::TreePop();
+			}
+
+			ImGui::TreePop();
+		}
+
+		if (ImGui::TreeNode ("Ambient Occlusion")) {
+
+	        ImGui::Checkbox ("Enable Ambient Occlusion", &_settings->vct_ao_enabled);
+			ImGui::SliderFloat ("Cone Radius/Height", &_settings->vct_ao_cone_ratio, 0.0f, 1.0f);
+			ImGui::SliderFloat ("Cone Distance (Voxels Space)", &_settings->vct_ao_cone_distance, 0.0f, 1.0f);
+
+	        ImGui::Separator();
+
+			if (ImGui::TreeNode ("Debug")) {
+
+				ShowImage ("Ambient Occlusion Map", vctStat->vctAmbientOcclusionMapVolume);
+
+				ImGui::TreePop();
+			}
+
+			ImGui::TreePop();
+		}
+
+		if (ImGui::TreeNode ("Shadows")) {
+
+	        ImGui::Checkbox ("Shadow Cone Cast", &_settings->vct_shadow_cone_enabled);
+			ImGui::SliderFloat ("Cone Radius/Height", &_settings->vct_shadow_cone_ratio, 0.0f, 1.0f, "%3f", 10.0f);
+			ImGui::SliderFloat ("Cone Distance (Voxels Space)", &_settings->vct_shadow_cone_distance, 0.0f, 1.0f);
+
+	        ImGui::Separator();
+
+			if (ImGui::TreeNode ("Debug")) {
+
+				ShowImage ("Shadow", vctStat->vctShadowVolume);
+
+				ImGui::TreePop();
+			}
+
+			ImGui::TreePop();
+		}
 
 		if (lastVoxelVolumeSize != _settings->vct_voxels_size ||
 			lastVoxelBordering != _settings->vct_bordering ||
@@ -461,271 +530,108 @@ void EditorRenderingSettings::ShowRenderingSettingsWindow ()
 				_settings->vct_debug_volume_mipmap_level, (std::size_t) 0,
 				(std::size_t) _settings->vct_mipmap_levels - 1);
 
-			auto vctStat = StatisticsManager::Instance ()->GetStatisticsObject <VCTStatisticsObject> ();
+			ImGui::TreePop();
+		}
+	}
+
+    ImGui::Spacing();
+
+	if (ImGui::CollapsingHeader ("Screen Space Global Illumination")) {
+
+		if (ImGui::TreeNode ("Diffuse Indirect Illumination")) {
+
+			ImGui::InputFloat ("Intensity", &_settings->ssdo_indirect_intensity, 0.1f);
+
+			std::size_t limit1 = 1, limit2 = 500;
+			ImGui::SliderScalar ("Sample Count", ImGuiDataType_U32, &_settings->ssdo_samples, &limit1, &limit2);
+
+			ImGui::InputFloat ("Sampling Radius", &_settings->ssdo_radius, 0.1f);
 
 			ImGui::Separator ();
 
-			if (ImGui::TreeNode ("Indirect Light")) {
+			ImGui::Text ("Screen Interpolation");
 
-				int windowWidth = ImGui::GetWindowWidth() * 0.95f;
+			ImGui::Checkbox ("Enable Interpolation", &_settings->ssdo_interpolation_enabled);
+			ImGui::Checkbox ("Shown Non Interpolated Pixels", &_settings->ssdo_debug_interpolation);
 
-				FramebufferRenderVolume* vctIndirectDiffuseMapVolume = vctStat->vctIndirectDiffuseMapVolume;
-				FramebufferRenderVolume* vctIndirectSpecularMapVolume = vctStat->vctIndirectSpecularMapVolume;
-				FramebufferRenderVolume* vctAmbientOcclusionMapVolume = vctStat->vctAmbientOcclusionMapVolume;
-				FramebufferRenderVolume* vctSubsurfaceScatteringMapVolume = vctStat->vctSubsurfaceScatteringMapVolume;
-				FramebufferRenderVolume* vctShadowVolume = vctStat->vctShadowVolume;
+			float interpolationScale = _settings->ssdo_interpolation_scale;
+			ImGui::InputFloat ("Interpolation Scale", &interpolationScale);
+			if (interpolationScale > 0) {
+				_settings->ssdo_interpolation_scale = interpolationScale;
+			}
 
-				if (vctIndirectDiffuseMapVolume != nullptr) {
-					auto vctMapSize = vctIndirectDiffuseMapVolume->GetFramebuffer ()->GetTexture (0)->GetSize ();
+			ImGui::InputFloat ("Min Interpolation Distance", &_settings->ssdo_min_interpolation_distance, 0.1);
+			ImGui::InputFloat ("Min Interpolation Angle (deg)", &_settings->ssdo_min_interpolation_angle, 0.1);
 
-					int vctMapWidth = windowWidth;
-					int vctMapHeight = ((float) vctMapSize.height / vctMapSize.width) * vctMapWidth;
+			ImGui::Separator ();
 
-					ImGui::Text ("Indirect Diffuse Light Map");
-					ShowImage (vctIndirectDiffuseMapVolume->GetFramebufferView ()->GetTextureView (0)->GetGPUIndex (), glm::ivec2 (vctMapWidth, vctMapHeight));
+			if (ImGui::TreeNode ("Debug")) {
+				auto ssdoStat = StatisticsManager::Instance ()->GetStatisticsObject <SSDOStatisticsObject> ();
 
-					ImGui::Text ("Indirect Specular Light Map");
-					ShowImage (vctIndirectSpecularMapVolume->GetFramebufferView ()->GetTextureView (0)->GetGPUIndex (), glm::ivec2 (vctMapWidth, vctMapHeight));
+				ShowImage ("Diifuse Indirect Interpolated Map", ssdoStat->ssdoInterpolatedMapVolume);
 
-					ImGui::Text ("Subsurface Scattering Map");
-					ShowImage (vctSubsurfaceScatteringMapVolume->GetFramebufferView ()->GetTextureView (0)->GetGPUIndex (), glm::ivec2 (vctMapWidth, vctMapHeight));
-
-					ImGui::Text ("Ambient Occlusion Map");
-					ShowImage (vctAmbientOcclusionMapVolume->GetFramebufferView ()->GetTextureView (0)->GetGPUIndex (), glm::ivec2 (vctMapWidth, vctMapHeight));
-
-					ImGui::Text ("Shadow");
-					ShowImage (vctShadowVolume->GetFramebufferView ()->GetTextureView (0)->GetGPUIndex (), glm::ivec2 (vctMapWidth, vctMapHeight));
-				}
+				ShowImage ("Diffuse Indirect Illumination Map", ssdoStat->ssdoMapVolume);
 
 				ImGui::TreePop();
 			}
 
 			ImGui::TreePop();
 		}
-	}
 
-    ImGui::Spacing();
+		if (ImGui::TreeNode ("Glossy Reflections")) {
 
-	if (ImGui::CollapsingHeader ("Temporal Reflective Shadow Mapping")) {
+			ImGui::InputFloat ("Intensity", &_settings->ssr_intensity, 0.1f);
 
-		ImGui::PushID ("Temporal Reflective Shadow Mapping");
-		std::size_t limit1 = 0, limit2 = 500;
-		ImGui::SliderScalar ("Samples Size", ImGuiDataType_U32, &_settings->trsm_samples, &limit1, &limit2);
+			// ImGui::SliderFloat ("Roughness", &_settings->ssr_roughness, 0.0f, 1.0f);
 
-		ImGui::InputFloat ("Indirect Diffuse Light Intensity ", &_settings->trsm_indirect_diffuse_intensity, 0.1f);
-		ImGui::PopID ();
+			std::size_t step = 1;
+			ImGui::InputScalar ("Iteration Count", ImGuiDataType_U32, &_settings->ssr_iterations, &step);
 
-		ImGui::Separator ();
+			ImGui::SliderFloat ("Sample Thickness", &_settings->ssr_thickness, 0.0f, 10.0f);
 
-		ImGui::Checkbox ("Temporal Filter Enabled", &_settings->trsm_temporal_filter_enabled);
-		ImGui::Checkbox ("Blur Enabled", &_settings->trsm_blur_enabled);
+			// std::size_t strideStep = 1;
+			// ImGui::InputScalar ("Sample Stride", ImGuiDataType_U32, &_settings->ssr_stride, &strideStep);
 
-		ImGui::Separator();
+			ImGui::Separator ();
 
-		ImGui::PushID ("TRSMDebug");
-		if (ImGui::TreeNode ("Debug")) {
+			if (ImGui::TreeNode ("Debug")) {
+				auto ssrStat = StatisticsManager::Instance ()->GetStatisticsObject <SSRStatisticsObject> ();
 
-			auto rsmStat = StatisticsManager::Instance ()->GetStatisticsObject <RSMStatisticsObject> ();
-			auto trsmStat = StatisticsManager::Instance ()->GetStatisticsObject <TRSMStatisticsObject> ();
+				ShowImage ("SSR Position Map", ssrStat->ssrPositionMapVolume);
 
-			if (ImGui::TreeNode ("Reflective Shadow Map")) {
-				if (rsmStat->rsmVolume != nullptr) {
-
-					FramebufferRenderVolume* rsmVolume = rsmStat->rsmVolume;
-
-					int windowWidth = ImGui::GetWindowWidth() * 0.65f;
-
-					ImGui::Text ("Depth Map");
-					ShowImage (rsmVolume->GetFramebufferView ()->GetDepthTextureView ()->GetGPUIndex (), glm::ivec2 (windowWidth, windowWidth));
-
-					ImGui::Text ("Position Map");
-					ShowImage (rsmVolume->GetFramebufferView ()->GetTextureView (1)->GetGPUIndex (), glm::ivec2 (windowWidth, windowWidth));
-
-					ImGui::Text ("Normal Map");
-					ShowImage (rsmVolume->GetFramebufferView ()->GetTextureView (2)->GetGPUIndex (), glm::ivec2 (windowWidth, windowWidth));
-
-					ImGui::Text ("Flux Map");
-					ShowImage (rsmVolume->GetFramebufferView ()->GetTextureView (3)->GetGPUIndex (), glm::ivec2 (windowWidth, windowWidth));
-				}
-
-				ImGui::TreePop();
-			}
-
-			if (ImGui::TreeNode ("Indirect Light")) {
-				if (trsmStat->trsmIndirectDiffuseMapVolume != nullptr) {
-
-					int windowWidth = ImGui::GetWindowWidth() * 0.95f;
-
-					FramebufferRenderVolume* trsmIndirectDiffuseMapVolume = trsmStat->trsmIndirectDiffuseMapVolume;
-					FramebufferRenderVolume* trsmTemporalFilterMapVolume = trsmStat->trsmTemporalFilterMapVolume;
-					FramebufferRenderVolume* rsmIndirectSpecularMapVolume = rsmStat->rsmIndirectSpecularMapVolume;
-					FramebufferRenderVolume* rsmSubsurfaceScatteringMapVolume = rsmStat->rsmSubsurfaceScatteringMapVolume;
-					FramebufferRenderVolume* rsmAmbientOcclusionMapVolume = rsmStat->rsmAmbientOcclusionMapVolume;
-
-					auto trsmMapSize = trsmIndirectDiffuseMapVolume->GetFramebuffer ()->GetTexture (0)->GetSize ();
-
-					int trsmMapWidth = windowWidth;
-					int trsmMapHeight = ((float) trsmMapSize.height / trsmMapSize.width) * trsmMapWidth;
-
-					ImGui::Text ("Indirect Diffuse Light Map");
-					ShowImage (trsmIndirectDiffuseMapVolume->GetFramebufferView ()->GetTextureView (0)->GetGPUIndex (), glm::ivec2 (trsmMapWidth, trsmMapHeight));
-
-					ImGui::Text ("Temporal Filter Map");
-					ShowImage (trsmTemporalFilterMapVolume->GetFramebufferView ()->GetTextureView (0)->GetGPUIndex (), glm::ivec2 (trsmMapWidth, trsmMapHeight));
-
-					ImGui::Text ("Indirect Specular Light Map");
-					ShowImage (rsmIndirectSpecularMapVolume->GetFramebufferView ()->GetTextureView (0)->GetGPUIndex (), glm::ivec2 (trsmMapWidth, trsmMapHeight));
-
-					ImGui::Text ("Subsurface Scattering Map");
-					ShowImage (rsmSubsurfaceScatteringMapVolume->GetFramebufferView ()->GetTextureView (0)->GetGPUIndex (), glm::ivec2 (trsmMapWidth, trsmMapHeight));
-
-					ImGui::Text ("Ambient Occlusion Map");
-					ShowImage (rsmAmbientOcclusionMapVolume->GetFramebufferView ()->GetTextureView (0)->GetGPUIndex (), glm::ivec2 (trsmMapWidth, trsmMapHeight));
-				}
+				ShowImage ("SSR Map", ssrStat->ssrMapVolume);
 
 				ImGui::TreePop();
 			}
 
 			ImGui::TreePop();
 		}
-		ImGui::PopID ();
-	}
 
-    ImGui::Spacing();
+		if (ImGui::TreeNode ("Refraction")) {
 
-	if (ImGui::CollapsingHeader ("Hybrid Global Illumination")) {
+			ImGui::InputFloat ("Intensity", &_settings->sst_intensity, 0.1f);
 
-		ImGui::Checkbox ("Temporal Filter Enabled", &_settings->hgi_temporal_filter_enabled);
+			std::size_t step = 1;
+			ImGui::InputScalar ("Iteration Count", ImGuiDataType_U32, &_settings->sst_iterations, &step);
 
-		ImGui::Separator ();
+			ImGui::SliderFloat ("Sample Thickness", &_settings->sst_thickness, 0.0f, 10.0f);
 
-		std::size_t limit1 = 1, limit2 = 500;
-		ImGui::SliderScalar ("RSM Samples Size", ImGuiDataType_U32, &_settings->hgi_rsm_samples, &limit1, &limit2);
+			ImGui::Separator ();
 
-		ImGui::InputFloat ("RSM Sample Radius", &_settings->hgi_rsm_radius, 0.1);
+			if (ImGui::TreeNode ("Debug")) {
+				auto ssrStat = StatisticsManager::Instance ()->GetStatisticsObject <SSSubsurfaceScatteringStatisticsObject> ();
 
-		ImGui::Separator();
-
-		ImGui::SliderScalar ("SSDO Samples Size", ImGuiDataType_U32, &_settings->hgi_ssdo_samples, &limit1, &limit2);
-
-		ImGui::InputFloat ("SSDO Sample Radius", &_settings->hgi_ssdo_radius, 0.1);
-
-		ImGui::InputFloat ("SSDO Sampling Scale", &_settings->hgi_ssdo_sampling_scale, 0.1);
-
-		ImGui::Separator();
-
-		ImGui::InputFloat ("Thickness", &_settings->hgi_rsm_thickness, 0.1);
-
-		ImGui::Separator();
-
-		ImGui::PushID ("HGIIndirect Light Intensity");
-		ImGui::InputFloat ("RSM Indirect Diffuse Light Intensity", &_settings->hgi_rsm_indirect_diffuse_intensity, 0.1);
-		ImGui::InputFloat ("SSDO Indirect Diffuse Light Intensity", &_settings->hgi_ssdo_indirect_diffuse_intensity, 0.1);
-		ImGui::InputFloat ("RSM Indirect Specular Light Intensity", &_settings->hgi_rsm_indirect_specular_intensity, 0.1);
-		ImGui::InputFloat ("SSR Indirect Specular Light Intensity", &_settings->hgi_ssr_indirect_specular_intensity, 0.1);
-		// ImGui::InputFloat ("Indirect Refractive Intensity", &_settings->lpv_indirect_refractive_intensity, 0.1);
-		ImGui::PopID ();
-
-		ImGui::Separator ();
-
-		ImGui::Checkbox ("Enable Interpolation", &_settings->hgi_interpolation_enabled);
-
-		ImGui::Checkbox ("Shown Non Interpolated Pixels", &_settings->hgi_debug_interpolation);
-
-		float interpolationScale = _settings->hgi_interpolation_scale;
-		ImGui::InputFloat ("Interpolation Scale", &interpolationScale);
-		if (interpolationScale > 0) {
-			_settings->hgi_interpolation_scale = interpolationScale;
-		}
-
-		ImGui::InputFloat ("Min Interpolation Distance", &_settings->hgi_min_interpolation_distance, 0.1);
-		ImGui::InputFloat ("Min Interpolation Angle (deg)", &_settings->hgi_min_interpolation_angle, 0.1);
-
-		ImGui::Separator();
-
-		ImGui::Checkbox ("AO Enabled", &_settings->hgi_ao_enabled);
-
-		limit1 = 0, limit2 = 200;
-		ImGui::SliderScalar ("AO Samples Size", ImGuiDataType_U32, &_settings->hgi_ao_samples, &limit1, &limit2);
-
-		ImGui::InputFloat ("AO Radius", &_settings->hgi_ao_radius, 0.1f);
-		ImGui::InputFloat ("AO Bias", &_settings->hgi_ao_bias, 0.1f);
-		ImGui::SliderFloat ("AO Blend", &_settings->hgi_ao_blend, 0.0f, 1.0f);
-
-		ImGui::Separator();
-
-		ImGui::PushID ("HGIDebug");
-		if (ImGui::TreeNode ("Debug")) {
-
-			auto rsmStat = StatisticsManager::Instance ()->GetStatisticsObject <RSMStatisticsObject> ();
-			auto hgiStat = StatisticsManager::Instance ()->GetStatisticsObject <HGIStatisticsObject> ();
-
-			if (ImGui::TreeNode ("Reflective Shadow Map")) {
-				if (rsmStat->rsmVolume != nullptr) {
-
-					FramebufferRenderVolume* rsmVolume = rsmStat->rsmVolume;
-
-					int windowWidth = ImGui::GetWindowWidth() * 0.65f;
-
-					ImGui::Text ("Depth Map");
-					ShowImage (rsmVolume->GetFramebufferView ()->GetDepthTextureView ()->GetGPUIndex (), glm::ivec2 (windowWidth, windowWidth));
-
-					ImGui::Text ("Position Map");
-					ShowImage (rsmVolume->GetFramebufferView ()->GetTextureView (1)->GetGPUIndex (), glm::ivec2 (windowWidth, windowWidth));
-
-					ImGui::Text ("Normal Map");
-					ShowImage (rsmVolume->GetFramebufferView ()->GetTextureView (2)->GetGPUIndex (), glm::ivec2 (windowWidth, windowWidth));
-
-					ImGui::Text ("Flux Map");
-					ShowImage (rsmVolume->GetFramebufferView ()->GetTextureView (3)->GetGPUIndex (), glm::ivec2 (windowWidth, windowWidth));
-				}
-
-				ImGui::TreePop();
-			}
-
-			if (ImGui::TreeNode ("Indirect Light")) {
-
-				// FramebufferRenderVolume* rsmIndirectSpecularMapVolume = rsmStat->rsmIndirectSpecularMapVolume;
-				// FramebufferRenderVolume* rsmSubsurfaceScatteringMapVolume = rsmStat->rsmSubsurfaceScatteringMapVolume;
-				// FramebufferRenderVolume* rsmAmbientOcclusionMapVolume = rsmStat->rsmAmbientOcclusionMapVolume;
-
-				ShowImage ("Direct Light Map", hgiStat->hgiDirectMapVolume);
-				ShowImage ("RSM Interpolated Indirect Diffuse Light Map", hgiStat->hgiRSMInterpolatedIndirectDiffuseMapVolume);
-				ShowImage ("RSM Indirect Diffuse Light Map", hgiStat->hgiRSMIndirectDiffuseMapVolume);
-				ShowImage ("SSDO Interpolated Indirect Diffuse Light Map", hgiStat->hgiSSDOInterpolatedIndirectDiffuseMapVolume);
-				ShowImage ("SSDO Indirect Diffuse Light Map", hgiStat->hgiSSDOIndirectDiffuseMapVolume);
-				ShowImage ("Indirect Diffuse Map", hgiStat->hgiIndirectDiffuseMapVolume);
-				ShowImage ("Indirect Diffuse Temporal Filter Map", hgiStat->hgiTemporalFilterMapVolume);
-				ShowImage ("SSR Position Map", hgiStat->hgiSSRPositionMapVolume);
-				ShowImage ("Indirect Specular Light Map", hgiStat->hgiIndirectSpecularMapVolume);
-				ShowImage ("RSM Ambient Occlusion Map", hgiStat->hgiRSMAmbientOcclusionMapVolume);
-				ShowImage ("Ambient Occlusion Map", hgiStat->hgiAmbientOcclusionMapVolume);
-				ShowImage ("AO Blur Map", hgiStat->hgiAOBlurMapVolume);
-				ShowImage ("Temporal Filter AO Map", hgiStat->hgiAOTemporalFilterMapVolume);
-
-				// ImGui::Text ("Indirect Specular Light Map");
-				// ShowImage (rsmIndirectSpecularMapVolume->GetFramebufferView ()->GetTextureView (0)->GetGPUIndex (), glm::ivec2 (trsmMapWidth, trsmMapHeight));
-
-				// ImGui::Text ("Subsurface Scattering Map");
-				// ShowImage (rsmSubsurfaceScatteringMapVolume->GetFramebufferView ()->GetTextureView (0)->GetGPUIndex (), glm::ivec2 (trsmMapWidth, trsmMapHeight));
-
-				// ImGui::Text ("Ambient Occlusion Map");
-				// ShowImage (rsmAmbientOcclusionMapVolume->GetFramebufferView ()->GetTextureView (0)->GetGPUIndex (), glm::ivec2 (trsmMapWidth, trsmMapHeight));
+				ShowImage ("SSR Map", ssrStat->ssrMapVolume);
 
 				ImGui::TreePop();
 			}
 
 			ImGui::TreePop();
 		}
-		ImGui::PopID ();
-	}
 
-	ImGui::Spacing ();
-
-	if (ImGui::CollapsingHeader ("Post Processing")) {
 		if (ImGui::TreeNode ("Screen Space Ambient Occlusion")) {
 
-			ImGui::Checkbox ("Enabled", &_settings->ssao_enabled);
+			ImGui::Checkbox ("Ambient Occlusion Enabled", &_settings->ssao_enabled);
 
 			float scale = _settings->ssao_scale;
 			ImGui::InputFloat ("Scale", &scale);
@@ -743,7 +649,7 @@ void EditorRenderingSettings::ShowRenderingSettingsWindow ()
 			ImGui::Separator ();
 
 			ImGui::Checkbox ("Blur Enabled", &_settings->ssao_blur_enabled);
-			ImGui::Checkbox ("Temporal Filter Enabled", &_settings->ssao_temporal_filter_enabled);
+			// ImGui::Checkbox ("Temporal Filter Enabled", &_settings->ssao_temporal_filter_enabled);
 
 			ImGui::Separator ();
 
@@ -751,227 +657,27 @@ void EditorRenderingSettings::ShowRenderingSettingsWindow ()
 
 				auto ssaoStat = StatisticsManager::Instance ()->GetStatisticsObject <SSAOStatisticsObject> ();
 
-				if (ssaoStat->ssaoMapVolume != nullptr) {
+				ShowImage ("SSAO Map", ssaoStat->ssaoMapVolume);
 
-					int windowWidth = ImGui::GetWindowWidth() * 0.95f;
+				ShowImage ("SSAO Blur Map", ssaoStat->ssaoBlurMapVolume);
 
-					FramebufferRenderVolume* ssaoMapVolume = ssaoStat->ssaoMapVolume;
-					FramebufferRenderVolume* ssaoBlurMapVolume = ssaoStat->ssaoBlurMapVolume;
-					FramebufferRenderVolume* ssaoTemporalFilterMapVolume = ssaoStat->ssaoTemporalFilterMapVolume;
-					TextureRenderVolume* ssaoNoiseMapVolume = ssaoStat->ssaoNoiseMapVolume;
+				ShowImage ("SSAO Temporal Filter Map", ssaoStat->ssaoTemporalFilterMapVolume);
 
-					auto ssaoMapSize = ssaoMapVolume->GetFramebuffer ()->GetTexture (0)->GetSize ();
+				int mapWidth = ImGui::GetContentRegionAvail().x * 0.95f;
 
-					int ssaoMapWidth = windowWidth;
-					int ssaoMapHeight = ((float) ssaoMapSize.height / ssaoMapSize.width) * ssaoMapWidth;
-
-					ImGui::Text ("SSAO Map");
-					ShowImage (ssaoMapVolume->GetFramebufferView ()->GetTextureView (0)->GetGPUIndex (), glm::ivec2 (ssaoMapWidth, ssaoMapHeight));
-
-					ImGui::Text ("SSAO Blur Map");
-					ShowImage (ssaoBlurMapVolume->GetFramebufferView ()->GetTextureView (0)->GetGPUIndex (), glm::ivec2 (ssaoMapWidth, ssaoMapHeight));
-
-					ImGui::Text ("SSAO Temporal Filter Map");
-					ShowImage (ssaoTemporalFilterMapVolume->GetFramebufferView ()->GetTextureView (0)->GetGPUIndex (), glm::ivec2 (ssaoMapWidth, ssaoMapHeight));
-
-					ImGui::Text ("SSAO Noise Map");
-					ShowImage (ssaoNoiseMapVolume->GetTextureView (0)->GetGPUIndex (), glm::ivec2 (windowWidth, windowWidth));
-				}
+				ImGui::Text ("SSAO Noise Map");
+				ShowImage (ssaoStat->ssaoNoiseMapVolume->GetTextureView (0)->GetGPUIndex (), glm::ivec2 (mapWidth));
 
 				ImGui::TreePop();
 			}
 
 			ImGui::TreePop();
 		}
+	}
 
-		if (ImGui::TreeNode ("Screen Space Directional Occlusion")) {
+	ImGui::Spacing ();
 
-			ImGui::Checkbox ("Enabled", &_settings->ssdo_enabled);
-			ImGui::Checkbox ("Temporal Filter Enabled", &_settings->ssdo_temporal_filter_enabled);
-
-			float scale = _settings->ssdo_scale;
-			ImGui::InputFloat ("Scale", &scale);
-			if (scale > 0) {
-				_settings->ssdo_scale = scale;
-			}
-
-			std::size_t limit1 = 1, limit2 = 500;
-			ImGui::SliderScalar ("Samples Size", ImGuiDataType_U32, &_settings->ssdo_samples, &limit1, &limit2);
-
-			ImGui::InputFloat ("Radius", &_settings->ssdo_radius, 0.1f);
-			ImGui::InputFloat ("Bias", &_settings->ssdo_bias, 0.1f);
-
-			float samplingScale = _settings->ssdo_sampling_scale;
-			ImGui::InputFloat ("Sampling Scale", &samplingScale, 0.1);
-			if (samplingScale > 0) {
-				_settings->ssdo_sampling_scale = samplingScale;
-			}
-
-			ImGui::InputFloat ("Indirect Light Intensity", &_settings->ssdo_indirect_intensity, 0.1f);
-
-			ImGui::Separator ();
-
-			ImGui::Checkbox ("Enable Interpolation", &_settings->ssdo_interpolation_enabled);
-			ImGui::Checkbox ("Shown Non Interpolated Pixels", &_settings->ssdo_debug_interpolation);
-
-			float interpolationScale = _settings->ssdo_interpolation_scale;
-			ImGui::InputFloat ("Interpolation Scale", &interpolationScale);
-			if (interpolationScale > 0) {
-				_settings->ssdo_interpolation_scale = interpolationScale;
-			}
-
-			ImGui::InputFloat ("Min Interpolation Distance", &_settings->ssdo_min_interpolation_distance, 0.1);
-			ImGui::InputFloat ("Min Interpolation Angle (deg)", &_settings->ssdo_min_interpolation_angle, 0.1);
-
-			ImGui::Separator ();
-
-			ImGui::Checkbox ("Shadow 2D Ray Cast", &_settings->ssdo_ray_shadow);
-
-			float shadowScale = _settings->ssdo_shadow_scale;
-			ImGui::InputFloat ("Shadow Scale", &shadowScale);
-			if (shadowScale > 0) {
-				_settings->ssdo_shadow_scale = shadowScale;
-			}
-
-			std::size_t strideStep = 1;
-			ImGui::InputScalar ("Shadow Stride", ImGuiDataType_U32, &_settings->ssdo_shadow_stride, &strideStep);
-
-			ImGui::Separator ();
-
-			if (ImGui::TreeNode ("Debug")) {
-				auto ssdoStat = StatisticsManager::Instance ()->GetStatisticsObject <SSDOStatisticsObject> ();
-
-				if (ssdoStat->ssdoMapVolume != nullptr) {
-
-					int windowWidth = ImGui::GetWindowWidth() * 0.9f;
-
-					FramebufferRenderVolume* ssdoMapVolume = ssdoStat->ssdoMapVolume;
-					FramebufferRenderVolume* ssdoTemporalFilterMapVolume = ssdoStat->ssdoTemporalFilterMapVolume;
-
-					FramebufferRenderVolume* ssdoInterpolatedMapVolume = ssdoStat->ssdoInterpolatedMapVolume;
-
-					auto size = ssdoMapVolume->GetFramebuffer ()->GetTexture (0)->GetSize ();
-
-					int width = windowWidth;
-					int height = ((float) size.height / size.width) * width;
-
-					ShowImage ("SSDO Interpolated Map", ssdoInterpolatedMapVolume->GetFramebufferView ()->GetTextureView (0)->GetGPUIndex (), glm::ivec2 (width, height));
-
-					ShowImage ("SSDO Map", ssdoMapVolume->GetFramebufferView ()->GetTextureView (0)->GetGPUIndex (), glm::ivec2 (width, height));
-
-					ShowImage ("SSDO Temporal Filter Map", ssdoTemporalFilterMapVolume->GetFramebufferView ()->GetTextureView (0)->GetGPUIndex (), glm::ivec2 (width, height));
-
-					// FramebufferRenderVolume* ssdoShadowVolume = ssdoStat->ssdoShadowVolume;
-
-					// ImGui::Text ("SSDO Shadow Map");
-					// ShowImage (ssdoShadowVolume->GetFramebufferView ()->GetTextureView (0)->GetGPUIndex (), glm::ivec2 (width, height));
-				}
-
-				ImGui::TreePop();
-			}
-
-			ImGui::TreePop();
-		}
-
-		if (ImGui::TreeNode ("Screen Space Reflection")) {
-
-			ImGui::Checkbox ("Enabled", &_settings->ssr_enabled);
-
-			float scale = _settings->ssr_scale;
-			ImGui::InputFloat ("Scale", &scale);
-			if (scale > 0) {
-				_settings->ssr_scale = scale;
-			}
-
-			ImGui::SliderFloat ("Roughness", &_settings->ssr_roughness, 0.0f, 1.0f);
-
-			std::size_t step = 1;
-			ImGui::InputScalar ("Sample Iterations", ImGuiDataType_U32, &_settings->ssr_iterations, &step);
-
-			ImGui::SliderFloat ("Sample Thickness", &_settings->ssr_thickness, 0.0f, 10.0f);
-
-			std::size_t strideStep = 1;
-			ImGui::InputScalar ("Stride", ImGuiDataType_U32, &_settings->ssr_stride, &strideStep);
-
-			ImGui::InputFloat ("Intensity", &_settings->ssr_intensity, 0.1f);
-
-			ImGui::Separator ();
-
-			if (ImGui::TreeNode ("Debug")) {
-				auto ssrStat = StatisticsManager::Instance ()->GetStatisticsObject <SSRStatisticsObject> ();
-
-				if (ssrStat->ssrPositionMapVolume != nullptr) {
-
-					int windowWidth = ImGui::GetWindowWidth() * 0.95f;
-
-					FramebufferRenderVolume* ssrPositionMapVolume = ssrStat->ssrPositionMapVolume;
-					FramebufferRenderVolume* ssrMapVolume = ssrStat->ssrMapVolume;
-
-					auto ssrMapSize = ssrPositionMapVolume->GetFramebuffer ()->GetTexture (0)->GetSize ();
-
-					int ssrMapWidth = windowWidth;
-					int ssrMapHeight = ((float) ssrMapSize.height / ssrMapSize.width) * ssrMapWidth;
-
-					ImGui::Text ("SSR Position Map");
-					ShowImage (ssrPositionMapVolume->GetFramebufferView ()->GetTextureView (0)->GetGPUIndex (), glm::ivec2 (ssrMapWidth, ssrMapHeight));
-
-					ImGui::Text ("SSR Map");
-					ShowImage (ssrMapVolume->GetFramebufferView ()->GetTextureView (0)->GetGPUIndex (), glm::ivec2 (ssrMapWidth, ssrMapHeight));
-				}
-
-				ImGui::TreePop();
-			}
-
-			ImGui::TreePop();
-		}
-
-		if (ImGui::TreeNode ("Screen Space Subsurface Scattering")) {
-
-			// ImGui::Checkbox ("Enabled", &_settings->ssr_enabled);
-
-			// float scale = _settings->ssr_scale;
-			// ImGui::InputFloat ("Scale", &scale);
-			// if (scale > 0) {
-			// 	_settings->ssr_scale = scale;
-			// }
-
-			// ImGui::SliderFloat ("Roughness", &_settings->ssr_roughness, 0.0f, 1.0f);
-
-			// std::size_t step = 1;
-			// ImGui::InputScalar ("Sample Iterations", ImGuiDataType_U32, &_settings->ssr_iterations, &step);
-
-			// ImGui::SliderFloat ("Sample Thickness", &_settings->ssr_thickness, 0.0f, 10.0f);
-
-			// std::size_t strideStep = 1;
-			// ImGui::InputScalar ("Stride", ImGuiDataType_U32, &_settings->ssr_stride, &strideStep);
-
-			// ImGui::InputFloat ("Intensity", &_settings->ssr_intensity, 0.1f);
-
-			// ImGui::Separator ();
-
-			if (ImGui::TreeNode ("Debug")) {
-				auto ssrStat = StatisticsManager::Instance ()->GetStatisticsObject <SSSubsurfaceScatteringStatisticsObject> ();
-
-				if (ssrStat->ssrMapVolume != nullptr) {
-
-					int windowWidth = ImGui::GetWindowWidth() * 0.95f;
-
-					FramebufferRenderVolume* ssrMapVolume = ssrStat->ssrMapVolume;
-
-					auto ssrMapSize = ssrMapVolume->GetFramebuffer ()->GetTexture (0)->GetSize ();
-
-					int ssrMapWidth = windowWidth;
-					int ssrMapHeight = ((float) ssrMapSize.height / ssrMapSize.width) * ssrMapWidth;
-
-					ImGui::Text ("SSR Map");
-					ShowImage (ssrMapVolume->GetFramebufferView ()->GetTextureView (0)->GetGPUIndex (), glm::ivec2 (ssrMapWidth, ssrMapHeight));
-				}
-
-				ImGui::TreePop();
-			}
-
-			ImGui::TreePop();
-		}
+	if (ImGui::CollapsingHeader ("Post Processing")) {
 
 		if (ImGui::TreeNode ("Temporal Anti-aliasing")) {
 
@@ -982,20 +688,7 @@ void EditorRenderingSettings::ShowRenderingSettingsWindow ()
 			if (ImGui::TreeNode ("Debug")) {
 				auto taaStat = StatisticsManager::Instance ()->GetStatisticsObject <TAAStatisticsObject> ();
 
-				if (taaStat->taaMapVolume != nullptr) {
-
-					int windowWidth = ImGui::GetWindowWidth() * 0.95f;
-
-					FramebufferRenderVolume* taaMapVolume = taaStat->taaMapVolume;
-
-					auto taaMapSize = taaMapVolume->GetFramebuffer ()->GetTexture (0)->GetSize ();
-
-					int taaMapWidth = windowWidth;
-					int taaMapHeight = ((float) taaMapSize.height / taaMapSize.width) * taaMapWidth;
-
-					ImGui::Text ("TAA Map");
-					ShowImage (taaMapVolume->GetFramebufferView ()->GetTextureView (0)->GetGPUIndex (), glm::ivec2 (taaMapWidth, taaMapHeight));
-				}
+				ShowImage ("TAA Map", taaStat->taaMapVolume);
 
 				ImGui::TreePop();
 			}
@@ -1187,11 +880,11 @@ void EditorRenderingSettings::ShowImage (const std::string& name, FramebufferRen
 
 	auto mapSize = renderVolume->GetFramebuffer ()->GetTexture (0)->GetSize ();
 
-	int mapWidth = ImGui::GetWindowWidth() * 0.95f;
+	int mapWidth = ImGui::GetContentRegionAvail().x * 0.95f;
 	int mapHeight = ((float) mapSize.height / mapSize.width) * mapWidth;
 
 	glm::ivec2 imageSize = glm::ivec2 (mapWidth, mapHeight);
 
-	ShowImage (name, renderVolume->GetFramebufferView ()->GetTextureView (0)->GetGPUIndex (), imageSize);
+	ShowImage (name, renderVolume->GetFramebufferView ()->GetTextureView (0)->GetGPUIndex (), imageSize);		
 }
 

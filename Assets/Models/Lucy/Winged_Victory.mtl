@@ -4,7 +4,7 @@
 newmtl Winged_Victory_Stamdard
 	Ns 10.0000
 	Ni 1.3300
-	d 0.1
+	d 1
 	Tf 1.0000 1.0000 1.0000
 	illum 2
 	Ka 0.5880 0.5880 0.5880

@@ -10,7 +10,7 @@ bool SSRSpecularRenderPass::IsAvailable (const RenderScene* renderScene, const C
 	 * Check if screen space reflection is enabled
 	*/
 
-	return settings.ssr_enabled;
+	return settings.indirect_specular_enabled;
 }
 
 std::string SSRSpecularRenderPass::GetPostProcessFragmentShaderPath () const

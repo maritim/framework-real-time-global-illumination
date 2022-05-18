@@ -40,6 +40,9 @@ Object* RenderSettingsLoader::Load (const std::string& filename)
 		else if (name == "SSR") {
 			ProcessSSR (content, settings);
 		}
+		else if (name == "SST") {
+			ProcessSST (content, settings);
+		}
 		else if (name == "TAA") {
 			ProcessTAA (content, settings);
 		}
@@ -180,6 +183,19 @@ void RenderSettingsLoader::ProcessSSR (TiXmlElement* xmlElem, RenderSettings* se
 	settings->ssr_intensity = std::stof (intensity);
 }
 
+void RenderSettingsLoader::ProcessSST (TiXmlElement* xmlElem, RenderSettings* settings)
+{
+	std::string enabled = xmlElem->Attribute ("enabled");
+	std::string iterations = xmlElem->Attribute ("iterations");
+	std::string thickness = xmlElem->Attribute ("thickness");
+	std::string intensity = xmlElem->Attribute ("intensity");
+
+	settings->sst_enabled = Extensions::StringExtend::ToBool (enabled);
+	settings->sst_iterations = std::stoul (iterations);
+	settings->sst_thickness = std::stof (thickness);
+	settings->sst_intensity = std::stof (intensity);
+}
+
 void RenderSettingsLoader::ProcessTAA (TiXmlElement* xmlElem, RenderSettings* settings)
 {
 	std::string enabled = xmlElem->Attribute ("enabled");
@@ -266,8 +282,10 @@ void RenderSettingsLoader::ProcessRSM (TiXmlElement* xmlElem, RenderSettings* se
 	std::string indirectDiffuseIntensity = xmlElem->Attribute ("indirectDiffuseIntensity");
 	std::string indirectSpecularIntensity = xmlElem->Attribute ("indirectSpecularIntensity");
 	std::string indirectRefractiveIntensity = xmlElem->Attribute ("indirectRefractiveIntensity");
-	std::string iterations = xmlElem->Attribute ("iterations");
-	std::string thickness = xmlElem->Attribute ("thickness");
+	std::string reflectionIterations = xmlElem->Attribute ("reflectionIterations");
+	std::string reflectionThickness = xmlElem->Attribute ("reflectionThickness");
+	std::string refractionIterations = xmlElem->Attribute ("refractionIterations");
+	std::string refractionThickness = xmlElem->Attribute ("refractionThickness");
 	std::string interpolationScale = xmlElem->Attribute ("interpolationScale");
 	std::string minInterpolationDistance = xmlElem->Attribute ("minInterpolationDistance");
 	std::string minInterpolationAngle = xmlElem->Attribute ("minInterpolationAngle");
@@ -279,8 +297,10 @@ void RenderSettingsLoader::ProcessRSM (TiXmlElement* xmlElem, RenderSettings* se
 	settings->rsm_indirect_diffuse_intensity = std::stof (indirectDiffuseIntensity);
 	settings->rsm_indirect_specular_intensity = std::stof (indirectSpecularIntensity);
 	settings->rsm_indirect_refractive_intensity = std::stof (indirectRefractiveIntensity);
-	settings->rsm_iterations = std::stoi (iterations);
-	settings->rsm_thickness = std::stof (thickness);
+	settings->rsm_reflection_iterations = std::stoi (reflectionIterations);
+	settings->rsm_reflection_thickness = std::stof (reflectionThickness);
+	settings->rsm_refraction_iterations = std::stoi (refractionIterations);
+	settings->rsm_refraction_thickness = std::stof (refractionThickness);
 	settings->rsm_interpolation_scale = std::stof (interpolationScale);
 	settings->rsm_min_interpolation_distance = std::stof (minInterpolationDistance);
 	settings->rsm_min_interpolation_angle = std::stof (minInterpolationAngle);
@@ -308,7 +328,8 @@ void RenderSettingsLoader::ProcessLPV (TiXmlElement* xmlElem, RenderSettings* se
 	std::string indirectDiffuseIntensity = xmlElem->Attribute ("indirectDiffuseIntensity");
 	std::string indirectSpecularIntensity = xmlElem->Attribute ("indirectSpecularIntensity");
 	std::string indirectRefractiveIntensity = xmlElem->Attribute ("indirectRefractiveIntensity");
-	std::string specularIterations = xmlElem->Attribute ("specularIterations");
+	std::string reflectionIterations = xmlElem->Attribute ("reflectionIterations");
+	std::string refractionIterations = xmlElem->Attribute ("refractionIterations");
 	std::string emissiveVoxelization = xmlElem->Attribute ("emissiveVoxelization");
 	std::string emissiveNormalAngleStep = xmlElem->Attribute ("emissiveNormalAngleStep");
 	std::string emissiveCache = xmlElem->Attribute ("emissiveCache");
@@ -321,7 +342,8 @@ void RenderSettingsLoader::ProcessLPV (TiXmlElement* xmlElem, RenderSettings* se
 	settings->lpv_indirect_diffuse_intensity = std::stof (indirectDiffuseIntensity);
 	settings->lpv_indirect_specular_intensity = std::stof (indirectSpecularIntensity);
 	settings->lpv_indirect_refractive_intensity = std::stof (indirectRefractiveIntensity);
-	settings->lpv_specular_iterations = std::stoi (specularIterations);
+	settings->lpv_reflection_iterations = std::stoi (reflectionIterations);
+	settings->lpv_refraction_iterations = std::stoi (refractionIterations);
 	settings->lpv_emissive_voxelization = Extensions::StringExtend::ToBool (emissiveVoxelization);
 	settings->lpv_emissive_normal_angle_step = std::stof (emissiveNormalAngleStep);
 	settings->lpv_emissive_cache = Extensions::StringExtend::ToBool (emissiveCache);

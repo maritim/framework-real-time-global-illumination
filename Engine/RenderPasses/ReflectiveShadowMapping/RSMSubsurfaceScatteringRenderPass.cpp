@@ -94,8 +94,8 @@ std::vector<PipelineAttribute> RSMSubsurfaceScatteringRenderPass::GetCustomAttri
 	glm::ivec2 resolution = glm::ivec2 (glm::vec2 (settings.resolution.width, settings.resolution.height) * settings.rsm_scale);
 
 	rsmResolution.value = glm::vec3 (resolution, 0.0f);
-	rsmIterations.value.x = settings.rsm_iterations;
-	rsmThickness.value.x = settings.rsm_thickness;
+	rsmIterations.value.x = settings.rsm_refraction_iterations;
+	rsmThickness.value.x = settings.rsm_refraction_thickness;
 	rsmIndirectRefractiveIntensity.value.x = settings.rsm_indirect_refractive_intensity;
 
 	attributes.push_back (rsmResolution);

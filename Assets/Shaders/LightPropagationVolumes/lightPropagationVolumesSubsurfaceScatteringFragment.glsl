@@ -22,6 +22,7 @@ uniform vec3 minVertex;
 uniform vec3 maxVertex;
 uniform ivec3 volumeSize;
 
+uniform int lpvRefractiveIterations;
 uniform float lpvIndirectRefractiveIntensity;
 
 #include "deferred.glsl"
@@ -71,7 +72,7 @@ vec3 CalcIndirectRefractiveLight (vec3 in_position, vec3 in_normal, float in_ref
 
 	vec3 subsurfaceScatteringColor = vec3 (0.0f);
 
-	for(float refractiveIndex = 0; refractiveIndex < 5; refractiveIndex++) {
+	for(float refractiveIndex = 0; refractiveIndex < lpvRefractiveIterations; refractiveIndex++) {
 
 		vec3 indirectColor = vec3( 
 			dot( SHintensity, texture( volumeTextureR, volumePos) ),

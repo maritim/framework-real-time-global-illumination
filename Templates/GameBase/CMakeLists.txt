@@ -27,9 +27,9 @@ file (GLOB_RECURSE GameSourceFiles *)
 file (GLOB_RECURSE GameComponentHeaderFiles Components/*.h)
 
 add_custom_command(
-    COMMAND LiteHeaderTool Components ${CMAKE_CURRENT_BINARY_DIR}/GeneratedComponents.cpp GAME_API
+    COMMAND HeaderTool Components ${CMAKE_CURRENT_BINARY_DIR}/GeneratedComponents.cpp GAME_API
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/GeneratedComponents.cpp
-    DEPENDS ${GameComponentHeaderFiles} LiteHeaderTool
+    DEPENDS ${GameComponentHeaderFiles} HeaderTool
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/Templates/GameBase
     COMMENT "Generate persistent component data..."
     )
@@ -87,7 +87,7 @@ if(NOT MSVC)
 	target_compile_definitions (GameBase PRIVATE ENGINE_API=)
 	target_compile_definitions (GameBase PRIVATE GAME_API=)
 else(NOT MSVC)
-	target_link_libraries (GameBase LiteEngine)
+	target_link_libraries (GameBase FrameworkRealTimeGlobalIllumination)
 
 	target_compile_definitions (GameBase PRIVATE "ENGINE_API=__declspec(dllimport)")
 	target_compile_definitions (GameBase PRIVATE "GAME_API=__declspec(dllexport)")

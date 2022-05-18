@@ -12,7 +12,7 @@ bool RSMIndirectDiffuseLightRenderPass::IsAvailable (const RenderScene* renderSc
 	 * Always execure reflective shadow mapping indirect light render pass
 	*/
 
-	return true;
+	return settings.indirect_diffuse_enabled;
 }
 
 std::string RSMIndirectDiffuseLightRenderPass::GetPostProcessFragmentShaderPath () const

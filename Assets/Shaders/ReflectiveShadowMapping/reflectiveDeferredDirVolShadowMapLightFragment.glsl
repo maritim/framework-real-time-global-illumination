@@ -72,7 +72,11 @@ vec3 CalcDirectionalLight (vec3 in_position, vec3 in_normal, vec3 in_diffuse,
 			+ indirectSpecularColor + indirectDiffuseColor + ambientColor;
 			+ indirectDiffuseColor + ambientColor;
 
-	return mix (light, subsurfaceScatteringColor, in_transparency);
+	if (subsurfaceScatteringEnabled == 1) {
+		return mix (light, subsurfaceScatteringColor, in_transparency);
+	}
+
+	return light;
 }
 
 void main()

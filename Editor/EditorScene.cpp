@@ -78,7 +78,7 @@ void EditorScene::Update ()
 		ImVec2 limit1 = ImGui::GetWindowContentRegionMin ();
 		ImVec2 limit2 = ImGui::GetWindowContentRegionMax ();
 
-		_position = glm::ivec2 (position.x, position.y);
+		_position = glm::ivec2 (position.x, position.y) + glm::ivec2 (limit1.x, limit1.y);
 		_size = glm::ivec2 (limit2.x - limit1.x, limit2.y - limit1.y);
 
 		_isHovered = ImGui::IsItemHovered ();

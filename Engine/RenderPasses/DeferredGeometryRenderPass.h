@@ -43,7 +43,7 @@ protected:
 
 	void GenerateMipmaps ();
 
-	void BindFrameBuffer (int sceneLayers);
+	void BindFrameBuffer (int sceneLayers, const RenderSettings& settings);
 	void LockShader (int sceneLayers);
 
 	void UpdateVolumes (const RenderSettings& settings, RenderVolumeCollection* rvc);

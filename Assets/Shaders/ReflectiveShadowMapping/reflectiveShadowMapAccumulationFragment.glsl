@@ -6,11 +6,13 @@ layout(location = 2) out vec4 out_flux;
 
 uniform vec3 MaterialDiffuse;
 uniform vec3 MaterialSpecular;
+uniform vec3 MaterialEmissive;
 
 uniform float MaterialTransparency;
 
 uniform sampler2D DiffuseMap;
 uniform sampler2D SpecularMap;
+uniform sampler2D EmissiveMap;
 uniform sampler2D AlphaMap;
 
 const vec3 nullInAlphaMap = vec3 (0.0);
@@ -31,6 +33,7 @@ void main()
 	*/
 
 	vec3 diffuseMap = MaterialDiffuse * vec3 (texture2D (DiffuseMap, vert_texcoord.xy));
+	vec3 emissiveMap = MaterialEmissive * vec3 (texture2D (EmissiveMap, vert_texcoord.xy));
 	vec3 alphaMap = vec3 (texture2D (AlphaMap, vert_texcoord.xy));
 
 	/*
@@ -59,7 +62,7 @@ void main()
 	 *
 	*/
 
-	vec3 flux = lightColor * diffuseMap * lightIntensity;
+	vec3 flux = (diffuseMap + emissiveMap) * lightColor * lightIntensity;
 
 	/*
 	 * Output texel

@@ -52,7 +52,7 @@ void EditorStats::ShowStatistics ()
 	glm::ivec2 sceneWindowPos = EditorScene::Instance ()->GetWindowPosition ();
 	glm::ivec2 sceneWindowSize = EditorScene::Instance ()->GetWindowSize ();
 
-	ImGui::SetNextWindowPos(ImVec2 (sceneWindowPos.x + sceneWindowSize.x - 300, sceneWindowPos.y + 45), ImGuiCond_Always);
+	ImGui::SetNextWindowPos(ImVec2 (sceneWindowPos.x + sceneWindowSize.x - 300, sceneWindowPos.y + 5), ImGuiCond_Always);
 	ImGui::SetNextWindowSize (ImVec2 (200, 100), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowBgAlpha(0.3f);
 
